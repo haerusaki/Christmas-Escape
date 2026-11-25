@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Christmas Escape Room</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Pixelify+Sans:wght@500;700&display=swap" rel="stylesheet">
+<style>
+/* VOICE: a cosy 16-bit winter quest for 12-year-olds: playful, calm, very readable
+   IDEA: a handheld RPG cartridge: a pixel diorama on top, a dialogue box below
+   PICTURE: hand-drawn pixel scenes of the Frostspire Tower, one diorama per room
+   COLOUR and TYPE: midnight violet ground, frost blue support, holly red accent, lantern gold for rewards; Pixelify Sans titles, Atkinson Hyperlegible text
+   LAYOUT: one column on phones; on wide screens the clue rail sits beside the dialogue box */
+:root{color-scheme:dark;--bg:#17163f;--bg2:#0e0d2b;--panel:#24236a;--panel2:#302f86;--line:#5250b8;--ink:#fff;--soft:#dfe1ff;--frost:#8fd3ff;--holly:#ff5a76;--gold:#ffd34d;--ok:#4ee38a;--bad:#ff8094;--paper:#f7e7c1;--dark:#14102e}
+:root[data-theme=light],:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);background-image:radial-gradient(#ffffff12 1px,transparent 1.5px);background-size:22px 22px;color:var(--ink);font:18px/1.55 'Atkinson Hyperlegible',system-ui,sans-serif;overflow-x:clip;min-height:100vh}
+h1,h2,h3,.pix{font-family:'Pixelify Sans','Atkinson Hyperlegible',system-ui,sans-serif;font-weight:700;line-height:1.1;text-wrap:balance;margin:0}
+h1{font-size:clamp(34px,6.5vw,56px);color:var(--gold);text-shadow:4px 4px 0 #9e1f3d}
+h2{font-size:clamp(24px,3.4vw,32px);margin:6px 0 6px}
+h3{font-size:20px;color:var(--frost);margin:0 0 8px}
+p{margin:0 0 10px}
+[hidden]{display:none!important}
+.wrap{max-width:1120px;margin:0 auto;padding:12px max(3vw,10px) 48px}
+.px{background:var(--panel);box-shadow:0 -4px 0 0 var(--line),0 4px 0 0 var(--line),-4px 0 0 0 var(--line),4px 0 0 0 var(--line),inset 0 4px 0 0 #ffffff12,inset 0 -4px 0 0 #00000038;margin:4px}
+.btn{font:700 20px/1.15 'Pixelify Sans',system-ui,sans-serif;color:var(--dark);background:var(--gold);border:0;min-height:56px;padding:12px 22px;cursor:pointer;margin:4px;touch-action:manipulation;box-shadow:0 -4px 0 0 var(--dark),0 4px 0 0 var(--dark),-4px 0 0 0 var(--dark),4px 0 0 0 var(--dark),inset 0 -5px 0 0 #c98a1f,inset 0 4px 0 0 #fff3b0}
+.btn:active{transform:translateY(2px);box-shadow:0 -4px 0 0 var(--dark),0 4px 0 0 var(--dark),-4px 0 0 0 var(--dark),4px 0 0 0 var(--dark),inset 0 5px 0 0 #c98a1f}
+.btn.ghost{background:var(--panel2);color:#fff;box-shadow:0 -4px 0 0 var(--dark),0 4px 0 0 var(--dark),-4px 0 0 0 var(--dark),4px 0 0 0 var(--dark),inset 0 -5px 0 0 #1f1e5c,inset 0 4px 0 0 #4b4ab0}
+.btn.red{background:var(--holly);color:#fff;box-shadow:0 -4px 0 0 var(--dark),0 4px 0 0 var(--dark),-4px 0 0 0 var(--dark),4px 0 0 0 var(--dark),inset 0 -5px 0 0 #a01d3a,inset 0 4px 0 0 #ff9aac}
+.btn.sm{font-size:17px;min-height:48px;padding:8px 14px}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.btn[aria-pressed=true]{background:var(--frost);color:var(--dark)}
+:focus-visible{outline:3px dashed #fff;outline-offset:6px}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.icon{image-rendering:pixelated;vertical-align:middle}
+.cv{display:block;width:100%;height:auto;image-rendering:pixelated;background:#0b0a26}
+/* start */
+.start{display:grid;gap:18px}
+.start .cvbox{aspect-ratio:240/135;overflow:hidden}
+.start .cvbox canvas{height:100%}
+.intro{padding:22px clamp(16px,3vw,32px);display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:24px}
+.intro .sub{font:700 18px 'Pixelify Sans',sans-serif;color:var(--frost);margin:8px 0 14px}
+.intro .story{font-size:18px;color:var(--soft);max-width:62ch}
+.setup{display:grid;gap:14px;align-content:start}
+.lab{display:block;font:700 16px 'Pixelify Sans',sans-serif;color:var(--frost);margin:0 0 6px}
+.inp{width:100%;font:22px 'Atkinson Hyperlegible',sans-serif;color:#fff;background:var(--bg2);border:3px solid var(--frost);padding:10px 14px;min-height:56px;border-radius:0}
+.inp::placeholder{color:#a9acd6}
+.best{color:var(--gold);font-weight:700}
+@media(max-width:760px){.intro{grid-template-columns:1fr}}
+/* hud */
+.hud{position:sticky;top:0;z-index:20;background:var(--bg2);border-bottom:4px solid var(--dark);padding:8px max(3vw,10px)}
+.hudin{max-width:1120px;margin:0 auto;display:grid;grid-template-columns:auto auto auto 1fr auto;gap:6px 18px;align-items:center}
+.hearts{display:flex;gap:4px;align-items:center}
+.hearts img{width:30px;height:auto}
+.stat{display:flex;flex-direction:column;line-height:1.1}
+.stat .k{font-size:13px;color:#b9bcf0}
+.stat b{font:700 22px 'Pixelify Sans',sans-serif;font-variant-numeric:tabular-nums;white-space:nowrap}
+.progw{grid-column:1/-1;display:grid;gap:4px}
+.prog{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+.seg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:2px}
+.seg i{height:12px;background:#33327a;display:block}
+.seg i.done{background:var(--gold)}
+.seg i.now{background:var(--frost);animation:blink 1s steps(2) infinite}
+.plab{font-size:15px;color:#cfd2ff;margin:0}
+@keyframes blink{50%{opacity:.35}}
+@media(max-width:600px){.hudin{grid-template-columns:auto auto auto auto}.hud .rlab{display:none}.hearts img{width:24px}.stat b{font-size:19px}}
+.rlab{font:700 17px 'Pixelify Sans',sans-serif;color:var(--gold);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* game */
+.scene{position:relative;aspect-ratio:240/72;overflow:hidden;margin-top:12px}
+.scene canvas{height:100%}
+.gl{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:18px;margin-top:16px;align-items:start}
+@media(max-width:880px){.gl{grid-template-columns:1fr}}
+.card{padding:20px clamp(14px,2.6vw,28px) 22px}
+.ch{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:6px}
+.tag{font:700 14px 'Pixelify Sans',sans-serif;padding:4px 10px;background:var(--dark);color:var(--frost);white-space:nowrap}
+.tag.wr{color:#ffc0cc}
+.tag.tp{color:#fff;background:#3a3990}
+.qn{margin-left:auto;font-size:15px;color:#cfd2ff;white-space:nowrap}
+.ins{color:var(--soft);font-size:17px}
+.q{font-size:21px;line-height:1.5;margin:14px 0 12px;font-weight:700}
+.q .blank{display:inline-block;min-width:4.5em;border-bottom:3px solid var(--gold);color:transparent}
+mark{background:var(--holly);color:#fff;padding:0 4px;font-weight:700}
+.cue{display:inline-block;font-weight:400;color:var(--frost);margin-left:6px}
+.dir{background:var(--dark);border-left:6px solid var(--gold);padding:12px 16px;font-size:20px;font-weight:700}
+.read{background:var(--paper);color:var(--dark);padding:16px 20px;font-size:18px;line-height:1.6;margin:12px 4px 8px;box-shadow:0 -4px 0 0 #c9a46a,0 4px 0 0 #c9a46a,-4px 0 0 0 #c9a46a,4px 0 0 0 #c9a46a;max-width:70ch}
+.read p{margin:0 0 8px}
+.read .hd{font:700 16px 'Pixelify Sans',sans-serif;color:#9e1f3d;margin-bottom:6px}
+.read .sp{font-weight:700}
+.gap{font-weight:700;padding:0 3px;white-space:nowrap}
+.gap.now{background:var(--gold);color:var(--dark);outline:3px solid var(--dark)}
+.gap.todo{color:#7a5a20}
+.gap.ok{color:#156b3a;text-decoration:underline 3px}
+.gap.bad{color:#a01d3a;text-decoration:underline 3px}
+.gap.pre{color:#2c2a6b}
+.opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:8px 4px}
+@media(max-width:600px){.opts{grid-template-columns:1fr}}
+.opt{display:flex;gap:12px;align-items:center;text-align:left;font:700 19px/1.3 'Atkinson Hyperlegible',sans-serif;color:#fff;background:var(--panel2);border:0;min-height:62px;padding:10px 14px;cursor:pointer;touch-action:manipulation;box-shadow:0 -3px 0 0 var(--dark),0 3px 0 0 var(--dark),-3px 0 0 0 var(--dark),3px 0 0 0 var(--dark),inset 0 -4px 0 0 #1f1e5c;margin:3px}
+.opt:hover:not([disabled]){background:#3c3ba0}
+.opt .ol{flex:none;display:grid;place-items:center;width:32px;height:32px;background:var(--dark);color:var(--gold);font-family:'Pixelify Sans',sans-serif}
+.opt .om{margin-left:auto;font-size:15px;white-space:nowrap}
+.opt.right{background:#17603a}
+.opt.wrong{background:#7a2236}
+.opt.elim{opacity:.4;text-decoration:line-through}
+.opt[disabled]{cursor:default}
+.ansrow{display:flex;gap:10px;flex-wrap:wrap;align-items:stretch;margin:8px 4px}
+.ansrow .inp{flex:1 1 220px}
+.bank{display:flex;flex-wrap:wrap;gap:8px;margin:4px 4px 12px;align-items:center}
+.bank span{font:700 17px 'Atkinson Hyperlegible',sans-serif;background:var(--paper);color:var(--dark);padding:4px 12px}
+.bank .bl{background:none;color:var(--frost);padding:0;font-size:15px}
+.line{min-height:66px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px;background:var(--bg2);border:3px dashed var(--frost);margin:8px 4px}
+.line .ph{color:#a9acd6;font-size:16px}
+.line .punct{font:700 24px sans-serif;color:var(--gold)}
+.tiles{display:flex;flex-wrap:wrap;gap:8px;margin:10px 4px}
+.tile{font:700 19px 'Atkinson Hyperlegible',sans-serif;background:var(--paper);color:var(--dark);border:0;min-height:48px;padding:6px 14px;cursor:pointer;touch-action:manipulation;box-shadow:0 -3px 0 0 var(--dark),0 3px 0 0 var(--dark),-3px 0 0 0 var(--dark),3px 0 0 0 var(--dark),inset 0 -4px 0 0 #c9a46a;margin:3px}
+.line .tile{background:var(--gold)}
+.hints{margin:14px 4px 0;display:grid;gap:8px}
+.hbox{background:#3a2f12;color:#ffe9a8;padding:10px 14px;border-left:6px solid var(--gold);display:flex;gap:10px;align-items:flex-start}
+.hbox img{flex:none;margin-top:3px}
+.near{background:#2a3d6b;color:#fff;padding:10px 14px;border-left:6px solid var(--frost);margin:8px 4px}
+.fb{padding:16px 18px;margin:18px 4px 4px}
+.fb.ok{background:#14462c;box-shadow:0 -4px 0 0 var(--ok),0 4px 0 0 var(--ok),-4px 0 0 0 var(--ok),4px 0 0 0 var(--ok)}
+.fb.bad{background:#4d1426;box-shadow:0 -4px 0 0 var(--bad),0 4px 0 0 var(--bad),-4px 0 0 0 var(--bad),4px 0 0 0 var(--bad)}
+.fb .big{font:700 24px 'Pixelify Sans',sans-serif;margin-bottom:6px}
+.fb.ok .big{color:var(--ok)}.fb.bad .big{color:var(--bad)}
+.fb .why{background:#00000033;padding:10px 12px;margin:10px 0 12px}
+.fb s{color:#ffc0cc}
+/* rail */
+.rail{display:grid;gap:16px}
+.rail .px{padding:16px}
+.clues{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.clues li{display:flex;gap:10px;align-items:flex-start;font-size:16px;line-height:1.45}
+.clues li img{flex:none;margin-top:2px}
+.clues li.lock{color:#aeb1e6}
+.clues b{color:var(--gold)}
+.runes{display:flex;flex-wrap:wrap;gap:6px}
+.rune{position:relative;width:40px;height:48px;display:grid;place-items:center}
+.rune img{position:absolute;inset:0;width:40px;height:48px}
+.rune b{position:relative;font:700 22px 'Pixelify Sans',sans-serif;color:var(--dark);margin-top:2px}
+.rune.empty{background:#14102e;outline:2px dashed #4a49a8;outline-offset:-6px}
+.rune.empty b{color:#4a49a8}
+.mini{font-size:15px;color:#cfd2ff}
+.cluebox{display:grid;gap:10px;margin:12px 4px}
+.cluebox .c{display:flex;gap:12px;align-items:flex-start;background:var(--paper);color:var(--dark);padding:12px 14px;font-size:18px;font-weight:700}
+.cluebox .c img{flex:none;margin-top:3px}
+.cluebox .c.lock{background:#2a2970;color:#c3c6f5;font-weight:400}
+.coderow{display:flex;gap:10px;flex-wrap:wrap;margin:6px 4px}
+.coderow .inp{flex:1 1 220px;font:700 28px 'Pixelify Sans',sans-serif;letter-spacing:3px;text-transform:uppercase;text-align:center}
+/* map + timetable */
+.mapw{overflow-x:auto;margin:12px 4px 4px;background:#e8f4ff;box-shadow:0 -4px 0 0 var(--dark),0 4px 0 0 var(--dark),-4px 0 0 0 var(--dark),4px 0 0 0 var(--dark)}
+.mapw svg{display:block;width:100%;min-width:300px;height:auto}
+.mapkey{font-size:15px;color:var(--soft);margin:6px 4px 0}
+.scroll{overflow-x:auto}
+.ttw{margin:12px 4px 6px;box-shadow:0 -4px 0 0 #5b6390,0 4px 0 0 #5b6390,-4px 0 0 0 #5b6390,4px 0 0 0 #5b6390}
+table.tt{width:100%;min-width:560px;border-collapse:collapse;background:var(--dark);color:var(--gold);font-size:17px}
+.tt caption{caption-side:top;text-align:left;font:700 17px 'Pixelify Sans',sans-serif;color:#fff;background:#3a3990;padding:8px 12px}
+.tt th{color:#fff;text-align:left;padding:8px 10px;border-bottom:2px solid #5b6390;font-size:15px}
+.tt td{padding:8px 10px;border-bottom:1px solid #33327a;white-space:nowrap}
+.tt td.n{font:700 19px 'Pixelify Sans',sans-serif;text-align:right}
+@media(max-width:600px){table.tt{min-width:0}.tt thead{display:none}.tt tr{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px 10px;padding:10px 12px;border-bottom:2px solid #3a3990}.tt td,.tt td.n{border:0;padding:0;text-align:left;white-space:normal}.tt td::before{content:attr(data-l);display:block;font:400 12px 'Atkinson Hyperlegible',sans-serif;color:#b9bcf0}.tt td:first-child{color:#fff;font-weight:700}}
+/* overlays */
+.ov{position:fixed;inset:0;z-index:60;background:#0b0a26e6;display:grid;place-items:center;padding:16px}
+.ovp{width:100%;max-width:600px;max-height:92vh;overflow:auto;padding:24px clamp(16px,3vw,30px);text-align:center}
+.ovp .row{justify-content:center;margin-top:14px}
+.ovp blockquote{margin:14px 0;background:var(--paper);color:var(--dark);padding:14px 16px;font-size:19px;font-weight:700;text-align:left}
+.ovp .art{width:96px;height:auto;margin:6px auto 8px;display:block}
+.howto{text-align:left;display:grid;gap:10px;margin:14px 0;padding:0;list-style:none;counter-reset:s}
+.howto li{display:flex;gap:12px;align-items:flex-start;font-size:17px}
+.howto li::before{counter-increment:s;content:counter(s);flex:none;display:grid;place-items:center;width:30px;height:30px;background:var(--gold);color:var(--dark);font:700 17px 'Pixelify Sans',sans-serif}
+.pts{background:var(--dark);padding:10px 14px;text-align:left;font-size:16px;color:var(--soft)}
+/* results */
+.res{padding:22px clamp(16px,3vw,32px);margin-top:18px}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:16px 0}
+@media(max-width:700px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.kpi{background:var(--dark);padding:12px 14px}
+.kpi .k{font-size:14px;color:#b9bcf0}
+.kpi b{display:block;font:700 clamp(26px,4vw,38px) 'Pixelify Sans',sans-serif;color:var(--gold);white-space:nowrap}
+.cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px}
+@media(max-width:760px){.cols{grid-template-columns:1fr}}
+.bars{display:grid;gap:10px}
+.bar{display:grid;grid-template-columns:minmax(0,1fr) 3.6em;gap:4px 10px;align-items:center;font-size:16px}
+.bar .tr{grid-column:1/-1;height:14px;background:var(--dark)}
+.bar .tr i{display:block;height:100%;background:var(--frost)}
+.bar .tr i.lo{background:var(--holly)}
+.bar .v{text-align:right;font-weight:700;white-space:nowrap}
+.rt{width:100%;border-collapse:collapse;font-size:16px}
+.rt th,.rt td{padding:6px 8px;border-bottom:1px solid #3a3990;text-align:left}
+.rt td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.mis{display:grid;gap:10px;margin-top:10px}
+.mis .m{background:var(--dark);padding:12px 14px;font-size:16px}
+.mis .m .mq{font-weight:700;margin-bottom:4px}
+.mis .m .ma{color:#ffc0cc}.mis .m .mc{color:var(--ok)}
+.mis .m .mw{color:var(--soft);margin-top:4px}
+details summary{cursor:pointer;font:700 19px 'Pixelify Sans',sans-serif;color:var(--gold);padding:8px 0;min-height:44px}
+textarea.copy{width:100%;min-height:140px;font:15px monospace;background:var(--bg2);color:#fff;border:2px solid var(--frost);padding:10px}
+.pbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-top:12px}
+@keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.shake{animation:shake .25s 2}
+@media(prefers-reduced-motion:reduce){.seg i.now,.shake{animation:none}}
+</style>
+</head>
+<body>
+<noscript><p style="padding:20px">This game needs JavaScript.</p></noscript>
+
+<!-- HUD -->
+<header class="hud" id="hud" hidden>
+  <div class="hudin">
+    <div class="hearts" id="hearts" aria-label="Hearts"></div>
+    <div class="stat"><span class="k">Score</span><b id="score">0</b></div>
+    <div class="stat"><span class="k">Time</span><b id="time">00:00</b></div>
+    <div class="rlab" id="rlab"></div>
+    <button class="btn ghost sm" id="pauseBtn" aria-label="Pause the game">❚❚ Pause</button>
+    <div class="progw">
+      <div class="prog" id="prog" aria-hidden="true"></div>
+      <p class="plab" id="plab"></p>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <!-- START -->
+  <section id="start" class="start">
+    <div class="cvbox px"><canvas id="titleCv" class="cv" width="240" height="135" role="img" aria-label="Pixel scene: the snowy village of Pinehollow and the Frostspire Tower at night"></canvas></div>
+    <div class="intro px">
+      <div>
+        <h1>Christmas Escape Room</h1>
+        <p class="sub">The Frostspire Tower · Reading &amp; Writing · Units 3 and 4</p>
+        <p class="story">It's Christmas Eve in the snowy village of Pinehollow. Every year the <b>Star Lantern</b> lights the big tree in the square. But tonight <b>Nix the frost sprite</b> stole it and took it to the top of the Frostspire Tower!</p>
+        <p class="story">You are the village lantern-keeper. Climb the <b>7 rooms</b>, solve the trials, find the clues and open every door.</p>
+        <p class="best" id="bestLine" hidden></p>
+      </div>
+      <div class="setup">
+        <div>
+          <label class="lab" for="nameIn">Your name (optional)</label>
+          <input id="nameIn" class="inp" maxlength="30" autocomplete="off" placeholder="Type your name">
+        </div>
+        <div>
+          <span class="lab" id="modeLab">Hearts in every room</span>
+          <div class="row" role="group" aria-labelledby="modeLab">
+            <button class="btn ghost sm" id="m3" aria-pressed="true">Classic · 3</button>
+            <button class="btn ghost sm" id="m5" aria-pressed="false">Gentle · 5</button>
+          </div>
+        </div>
+        <div class="row">
+          <button class="btn ghost sm" id="sndBtn" aria-pressed="true">Sound: on</button>
+          <button class="btn ghost sm" id="howBtn">How to play</button>
+        </div>
+        <button class="btn" id="startBtn" style="width:calc(100% - 8px)">Start the adventure ▶</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- GAME -->
+  <section id="game" hidden>
+    <div class="scene px"><canvas id="sceneCv" class="cv" width="240" height="72" role="img" aria-label="Pixel scene of the current room"></canvas></div>
+    <div class="gl">
+      <div class="card px" id="card"></div>
+      <aside class="rail" id="rail"></aside>
+    </div>
+  </section>
+
+  <!-- WIN / RESULTS -->
+  <section id="win" hidden>
+    <div class="cvbox px" style="aspect-ratio:240/135;overflow:hidden"><canvas id="winCv" class="cv" width="240" height="135" style="height:100%" role="img" aria-label="Pixel scene: the Christmas tree shines again"></canvas></div>
+    <div class="res px" id="results"></div>
+  </section>
+</main>
+
+<!-- overlays -->
+<div class="ov" id="ov" hidden><div class="ovp px" id="ovp" role="dialog" aria-modal="true"></div></div>
+
+<script>
+{
+/* ============ helpers ============ */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const rnd=n=>Math.floor(Math.random()*n);
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=rnd(i+1);[a[i],a[j]]=[a[j],a[i]]}return a};
+const sample=(a,n)=>shuffle(a).slice(0,n);
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const hash=(a,b)=>{const h=Math.sin(a*127.1+b*311.7)*43758.5453;return h-Math.floor(h)};
+const norm=s=>String(s).normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/[’‘`´]/g,"'").replace(/[^a-z0-9' ]+/g,' ').replace(/\s+/g,' ').trim();
+const normCode=s=>norm(s).replace(/^the /,'').replace(/[ ']/g,'');
+const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
+const fmtT=ms=>{const s=Math.floor(ms/1000);return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')};
+const lev=(a,b)=>{const m=a.length,n=b.length;const d=Array.from({length:m+1},(_,i)=>[i]);for(let j=1;j<=n;j++)d[0][j]=j;for(let i=1;i<=m;i++)for(let j=1;j<=n;j++)d[i][j]=Math.min(d[i-1][j]+1,d[i][j-1]+1,d[i-1][j-1]+(a[i-1]===b[j-1]?0:1));return d[m][n]};
+const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+
+/* ============ CONTENT ============ */
+const MAP={places:[
+ {n:'Bakery',x:1,y:1,w:2,h:2,c:'#b8612c'},{n:'Library',x:4,y:1,w:2,h:2,c:'#4a5fc9'},
+ {n:'Café',x:6,y:1,w:2,h:2,c:'#a63d86'},{n:'Bookshop',x:9,y:1,w:2,h:2,c:'#2f7f6a'},
+ {n:'Toy Shop',x:1,y:4,w:2,h:2,c:'#c73a55'},{n:'Ice Rink',x:4,y:4,w:2,h:2,c:'#2f86bd'},
+ {n:'Post Office',x:6,y:4,w:2,h:2,c:'#b27a12'},{n:'Sweet Shop',x:9,y:4,w:2,h:2,c:'#b2449f'},
+ {n:'Museum',x:2,y:0,w:3,h:1,c:'#6d5bc0'},{n:'Park',x:2,y:6,w:3,h:1,c:'#2c7d47'},
+ {n:'Market',x:7,y:0,w:3,h:1,c:'#a94a33'},{n:'Train Station',x:7,y:6,w:3,h:1,c:'#5c6487'}]};
+const TT=[
+ {t:'Snow Owl',to:'Icebridge',lv:'17:15',ar:'17:50',p:'2',note:'Every day'},
+ {t:'Red Robin',to:'Pinehollow',lv:'18:05',ar:'18:40',p:'1',note:'Not on Sundays'},
+ {t:'Silver Fox',to:'Frostspire',lv:'19:30',ar:'20:25',p:'3',note:'Café on board'},
+ {t:'Snow Owl',to:'Icebridge',lv:'21:10',ar:'21:45',p:'4',note:'Delayed 15 minutes'},
+ {t:'Star Reindeer',to:'Frostspire',lv:'22:50',ar:'23:40',p:'2',note:'Last train'}];
+const TF=['True','False',"Doesn't say"];
+
+const ROOMS=[
+{name:'The Frozen Ticket Hall',unit:'Unit 3 · Getting around town',rune:'N',codeAsk:'Write the secret word.',
+ story:"The first floor of the tower is an old train station. Nix froze the ticket machine and tore the station master's note. Fix the travel words to open the door!",
+ trials:[
+ {id:'1A',title:'The Ticket Machine',skill:'Reading',topic:'Transport collocations',type:'mc',n:4,
+  instr:'Read the sentence. Choose the word that completes the travel phrase.',
+  rule:'These are word partners (collocations). Read the whole sentence and say the phrase in your head: set off, pay a fare, hire a bike, get a lift…',
+  pool:[
+  {q:'We have to ___ off at 6 a.m. to catch the sleigh train.',opts:['set','get','go'],why:'We say “set off” = start a journey.'},
+  {q:'You must ___ a fare before you get on the bus.',opts:['pay','buy','spend'],why:'“Pay a fare” = pay money for a trip on a bus or a train.'},
+  {q:"Let's ___ a bike and ride around the frozen lake.",opts:['hire','do','make'],why:'“Hire a bike” = pay to use a bike for a short time.'},
+  {q:'Can you look ___ the timetable on your phone?',opts:['up','on','in'],why:'“Look up a timetable” = search for information in it.'},
+  {q:"Dad can't drive us. Can we get a ___ with your mum?",opts:['lift','car','road'],why:"“Get a lift” = travel in someone's car, usually for free."},
+  {q:"Please use the cycle ___. It's safer for bikes.",opts:['lane','line','race'],why:'A “cycle lane” is the part of the road only for bikes.'},
+  {q:"Let's look at the map and find the best ___ to the castle.",opts:['route','travel','trip'],why:'“Find the best route” = find the best way to go somewhere.'},
+  {q:"The train is late. It's ___ because of the snow.",opts:['delayed','waited','missed'],why:'“Be delayed” = be late because of a problem.'},
+  {q:'The bus always arrives ___ time, at exactly 8:00.',opts:['on','at','by'],why:'“On time” = at the correct time, not late.'},
+  {q:'There were lots of people, so we had to ___ for tickets.',opts:['queue','hurry','cross'],why:'“Queue” = wait in a line of people.'}]},
+ {id:'1B',title:'The Torn Note',skill:'Writing',topic:'Verbs + prepositions',type:'type',n:4,autoBank:true,extra:['for','over','on','off','through','around','along','past'],
+  instr:"Nix tore the station master's note! Write the missing word. Use the word box.",
+  rule:'Some verbs need a small word after them: ask FOR, cross OVER, get ON / OFF, go THROUGH, look AROUND, turn AROUND, walk ALONG / PAST.',
+  pool:[
+  {q:'Excuse me, can I ask ___ directions to the market?',a:['for'],why:'We say “ask for directions”.'},
+  {q:'Be careful when you cross ___ the icy bridge.',a:['over'],why:'“Cross over” = go from one side to the other side.'},
+  {q:"The bus is here! Quick, let's get ___.",a:['on'],why:'“Get on” a bus or a train = go into it.'},
+  {q:'This is our stop. We need to get ___ the train now.',a:['off'],why:'“Get off” a bus or a train = leave it.'},
+  {q:'Go ___ the tunnel and you will see the tower on the other side.',a:['through'],why:'“Go through” = go in one side and come out the other side.'},
+  {q:"We have an hour, so let's look ___ the Christmas market. There are 50 stalls!",a:['around','round'],mis:{at:'“Look at” = use your eyes on one thing. “Look around” = walk and see the different parts of a place.'},why:'“Look around” = visit a place and see different things.'},
+  {q:'Oops! Wrong way. Turn ___ and go back.',a:['around','round'],why:'“Turn around” = turn so you face the other way.'},
+  {q:'Walk ___ the river until you see a red bridge.',a:['along'],why:'“Walk along” = follow a line, like a road or a river.'},
+  {q:"Walk ___ the bakery. Don't stop there: the toy shop is next.",a:['past'],why:'“Walk past” = go by something without stopping.'}]}],
+ codes:[
+  {a:['fare'],c:["It's the money you pay for a trip on a bus or a train.",'It has 4 letters. It rhymes with “chair”.','It starts with F.']},
+  {a:['lift'],c:["It's a free ride in someone's car: “Can I get a ___?”",'It has 4 letters. It rhymes with “gift”.','It starts with L.']},
+  {a:['queue'],c:["It's a line of people who are waiting.",'It has 5 letters, but you only hear one sound: /kjuː/.','It starts with Q and ends with E.']},
+  {a:['route'],c:["It's the way you choose to go from one place to another: “find the best ___”.",'It has 5 letters and it sounds like “root”.','It starts with R.']}]},
+
+{name:'The Map Room',unit:'Unit 3 · Getting around town',rune:'R',codeCtx:'map',codeAsk:'Write the name of the building.',
+ story:'A giant map of Pinehollow covers the wall. Nix hid the next key in one of the buildings. Read the directions very carefully!',
+ trials:[
+ {id:'2A',title:'Follow the Directions',skill:'Reading',topic:'Directions',type:'map',ctx:'map',n:4,
+  instr:'Look at the map. You start at START and you face the arrow. Read the directions and choose the place.',
+  rule:'From START, your LEFT is the top of the map and your RIGHT is the bottom. The first turning is Snow Lane. The second turning is Bell Street.',
+  pool:[
+  {d:'Go straight on and take the first turning on the left. Walk to the end of the street.',a:'Museum',why:'The first turning is Snow Lane. Left = the top of the map. The Museum is at the end of Snow Lane.'},
+  {d:"Take the first turning on the right. It's at the end of the street.",a:'Park',why:'First turning = Snow Lane. Right = the bottom of the map. The Park is at the end.'},
+  {d:'Go straight on. Take the second turning on the left and walk to the end.',a:'Market',why:'The second turning is Bell Street. Left = the top. The Market is at the end.'},
+  {d:"Go along Main Street and take the second turning on the right. It's at the end of the street.",a:'Train Station',why:'Second turning = Bell Street. Right = the bottom. The Train Station is at the end.'},
+  {d:"Go straight on. Go past the first turning. It's on your left, on the corner of Main Street and Snow Lane.",a:'Library',why:'After Snow Lane, the first building on your left (top) is the Library. It is on the corner.'},
+  {d:"Go past Snow Lane. It's on your right, next to the Post Office.",a:'Ice Rink',why:'After Snow Lane, on your right (bottom), the building next to the Post Office is the Ice Rink.'},
+  {d:"Walk along Main Street. It's on your left, between the Library and Bell Street.",a:'Café',why:'On the left (top), between the Library and Bell Street, there is the Café.'},
+  {d:"Walk along Main Street and go past both turnings. It's on your right, opposite the Bookshop.",a:'Sweet Shop',why:'After Bell Street, on your right (bottom), opposite the Bookshop, is the Sweet Shop.'},
+  {d:"Don't turn. It's on your right, before the first turning, opposite the Bakery.",a:'Toy Shop',why:'Before Snow Lane, on your right (bottom), opposite the Bakery, is the Toy Shop.'},
+  {d:"Go past Bell Street. It's on your left, opposite the Sweet Shop.",a:'Bookshop',why:'After Bell Street, on your left (top), opposite the Sweet Shop, is the Bookshop.'},
+  {d:"Go straight on. It's on your right, between the Ice Rink and Bell Street, opposite the Café.",a:'Post Office',why:'On your right (bottom), between the Ice Rink and Bell Street, is the Post Office.'},
+  {d:"It's on your left, before the first turning. It's opposite the Toy Shop.",a:'Bakery',why:'Before Snow Lane, on your left (top), opposite the Toy Shop, is the Bakery.'}]},
+ {id:'2B',title:'Write the Way',skill:'Writing',topic:'Directions',type:'order',n:4,
+  instr:'Put the words in order to write the directions. Be careful: one word is extra!',
+  rule:'Directions start with a verb: Turn… Go… Take… Walk… Cross… For a negative, use Don\'t + verb.',
+  pool:[
+  {w:['turn','left','at','the','bakery'],x:'in',p:'.',why:'We say “turn left AT the bakery” (at a place).'},
+  {w:['go','straight','on','past','the','library'],x:'of',p:'.',why:'“Go straight on” = don\'t turn. “Past the library” = go by it.'},
+  {w:['take','the','second','turning','on','the','right'],x:'in',p:'.',why:'We say ON the right and ON the left.'},
+  {w:['the','museum','is','at','the','end','of','the','street'],x:'on',p:'.',why:'We say AT the end of the street.'},
+  {w:['cross','over','the','bridge','and','turn','right'],x:'at',p:'.',alt:['turn right and cross over the bridge'],why:'“Cross over” + place. “And” joins two instructions.'},
+  {w:['the','café','is','opposite','the','post','office'],x:'of',p:'.',alt:['the post office is opposite the cafe'],why:'“Opposite” doesn\'t need “of”: opposite the post office.'},
+  {w:["don't",'turn','left','at','the','ice','rink'],x:'not',p:'.',alt:["at the ice rink don't turn left"],why:'Negative imperative: Don\'t + verb. We don\'t say “Not turn”.'},
+  {w:['walk','along','Main','Street','until','you','see','the','park'],x:'for',p:'.',why:'“Walk along” a street. “Until” = up to the moment you see it.'},
+  {w:["it's",'on','your','left','next','to','the','toy','shop'],x:'of',p:'.',alt:["it's next to the toy shop on your left"],why:'We say “next TO”, not “next of”.'},
+  {w:['ask','for','directions','at','the','station'],x:'to',p:'.',alt:['at the station ask for directions'],why:'We say “ask FOR directions”.'}]}],
+ codes:[
+  {a:['ice rink'],c:['Nix hid the key in a building on your RIGHT when you walk from START.','The building is opposite the Library.',"It's between Snow Lane and the Post Office."]},
+  {a:['bookshop'],c:['Nix hid the key in a building on your LEFT, after the second turning.','The building is opposite the Sweet Shop.','You can buy books there.']},
+  {a:['post office'],c:['Nix hid the key in a building on your RIGHT, next to Bell Street.','The building is opposite the Café.','You can send Christmas cards from there.']},
+  {a:['museum'],c:['Nix hid the key at the end of a street.','Take the first turning on the left and walk to the end.','You can see very old things there.']},
+  {a:['bakery'],c:['Nix hid the key in a building on your LEFT, before the first turning.','The building is opposite the Toy Shop.','You can buy bread and cakes there.']}]},
+
+{name:'The Clock Tower Station',unit:'Unit 3 · Getting around town',rune:'E',codeCtx:'tt',codeAsk:'Write 4 numbers.',
+ story:'Tick-tock! The sleigh-train timetable is frozen in the ice. Read it and plan the journey to open the door.',
+ trials:[
+ {id:'3A',title:'The Frozen Timetable',skill:'Reading',topic:'Present simple for future',type:'mc',ctx:'tt',n:4,
+  instr:'Read the timetable. Answer the question.',
+  rule:'Find the right row first (the train), then the right column (Leaves, Arrives, Platform or Notes).',
+  pool:[
+  {q:'What time does the Silver Fox leave?',opts:['19:30','20:25','18:05','22:50'],why:'Look at the “Leaves” column: the Silver Fox leaves at 19:30. 20:25 is when it arrives.'},
+  {q:'Which platform does the Red Robin leave from?',opts:['1','2','3','4'],fixed:true,a:0,why:'The Red Robin leaves from platform 1.'},
+  {q:'Which train has a café on board?',opts:['Silver Fox','Star Reindeer','Red Robin','Snow Owl'],why:'Look at the “Notes” column: “Café on board” is the Silver Fox.'},
+  {q:'Which train is late tonight?',opts:['the 21:10 Snow Owl','the 17:15 Snow Owl','the Red Robin','the Star Reindeer'],why:'“Delayed 15 minutes” means the 21:10 Snow Owl is late.'},
+  {q:'How long does the journey to Pinehollow take?',opts:['35 minutes','40 minutes','45 minutes','25 minutes'],why:'It leaves at 18:05 and arrives at 18:40. That is 35 minutes.'},
+  {q:'Read the sentence: “The Red Robin leaves at 18:40.” Is it true?',opts:['True','False'],fixed:true,a:1,why:'18:40 is the arrival time. The Red Robin leaves at 18:05.'},
+  {q:"It's Sunday today. Which train doesn't run?",opts:['Red Robin','Silver Fox','Star Reindeer','Snow Owl'],why:'“Not on Sundays” = the Red Robin doesn\'t run on Sundays.'},
+  {q:'Where does the Star Reindeer go?',opts:['Frostspire','Icebridge','Pinehollow'],why:'Look at the “To” column: the Star Reindeer goes to Frostspire.'},
+  {q:'How many trains go to Frostspire tonight?',opts:['1','2','3','5'],fixed:true,a:1,why:'Two trains: the Silver Fox and the Star Reindeer.'}]},
+ {id:'3B',title:'Plan the Journey',skill:'Writing',topic:'Present simple for future',type:'type',n:4,
+  instr:'Write the verb in the correct form. Some answers need two words (for example: doesn\'t stop).',
+  rule:'Timetables and programmes use the PRESENT SIMPLE for the future: it leaves, it starts. Questions: Does/Do…? Negatives: doesn\'t / don\'t + verb.',
+  pool:[
+  {q:'The Christmas concert ___ (start) at 8 p.m. tonight.',a:['starts'],why:'Programmes use the present simple: it starts (he/she/it + -s).'},
+  {q:'The sleigh train ___ (leave) at 7:15 tomorrow morning.',a:['leaves'],why:'A timetable = present simple for the future: the train leaves.'},
+  {q:'When ___ the museum open tomorrow? (do)',a:['does'],mis:{do:'The museum = it, so we use does: When does the museum open?'},why:'Questions: When + does + he/she/it + base verb (open).'},
+  {q:'The shops ___ (not close) until 10 p.m. on Christmas Eve.',a:["don't close",'do not close'],mis:{"doesn't close":'The shops = they, so we use don\'t: they don\'t close.'},why:'Negative with they (the shops): don\'t + base verb.'},
+  {q:'Our plane ___ (land) at 11:15 a.m.',a:['lands'],why:'A timetable = present simple: the plane lands.'},
+  {q:'The ice show ___ (finish) at half past nine.',a:['finishes'],mis:{finishs:'After -sh we add -es: finish → finishes.'},why:'After -sh, -ch, -s and -x we add -es: finish → finishes.'},
+  {q:'The bus ___ (not stop) at the castle. You have to walk.',a:["doesn't stop",'does not stop'],mis:{"don't stop":'The bus = it, so we use doesn\'t: it doesn\'t stop.'},why:'Negative with he/she/it: doesn\'t + base verb.'},
+  {q:'The last train ___ (arrive) at midnight.',a:['arrives'],why:'A timetable = present simple: it arrives.'},
+  {q:'___ the Christmas market open on Sunday? (do)',a:['does'],mis:{do:'The market = it, so we use Does.'},why:'Yes/No question: Does + he/she/it + base verb.'},
+  {q:'The parade ___ (go) past the clock tower at six.',a:['goes'],mis:{gos:'go → goes (we add -es).'},why:'go → goes: we add -es.'},
+  {q:'Hurry up! The film ___ (begin) in ten minutes.',a:['begins'],why:'Programmes use the present simple: the film begins.'}]}],
+ codes:[
+  {num:true,a:['2340'],c:['Find the LAST train to Frostspire.','The code is its ARRIVAL time. Write 4 numbers (09:15 → 0915).','Look at the Notes column: “Last train”.']},
+  {num:true,a:['1930'],c:['Find the train with a café on board.','The code is the time it LEAVES. Write 4 numbers (09:15 → 0915).',"It's the Silver Fox."]},
+  {num:true,a:['1840'],c:["Find the train that doesn't run on Sundays.",'The code is the time it ARRIVES. Write 4 numbers (09:15 → 0915).',"It's the Red Robin."]},
+  {num:true,a:['2110'],c:['Find the train that leaves from platform 4.','The code is the time it LEAVES. Write 4 numbers (09:15 → 0915).',"It's the Snow Owl that is delayed."]}]},
+
+{name:"The Traveller's Library",unit:'Unit 4 · Happy holidays',rune:'T',codeAsk:'Write the secret word.',
+ story:'Shelves full of holiday stories! Tilly the explorer left a postcard here. Use your holiday words to find the code.',
+ trials:[
+ {id:'4A',title:'The Four Families',skill:'Writing',topic:'Holiday chunks',type:'type',n:4,bank:['go','stay','check','get'],
+  instr:'Write the missing verb: go, stay, check or get.',
+  rule:'GO + activity or place (go sightseeing, go abroad). STAY + where you sleep (stay in a hostel). CHECK IN when you arrive (check in online). GET + a change (get lost, get sunburnt).',
+  pool:[
+  {q:'I love to ___ sightseeing when I visit a new city.',a:['go'],why:'GO family: go sightseeing, go backpacking, go abroad, go on holiday.'},
+  {q:'My cousin wants to ___ backpacking in Peru with two friends.',a:['go'],why:'GO family: go backpacking = travel with a backpack and little money.'},
+  {q:'Next year we want to ___ abroad, maybe to Japan!',a:['go'],why:'GO family: go abroad = go to another country.'},
+  {q:'In Chile, many families ___ on holiday in February.',a:['go'],why:'GO family: go on holiday.'},
+  {q:"It's cheap to ___ at a campsite near the lake.",a:['stay'],why:'STAY family: stay at a campsite, in a hotel, in a hostel, in a camper van.'},
+  {q:'My grandparents like to ___ in a hotel with a big pool.',a:['stay'],why:'STAY family: stay in a hotel.'},
+  {q:"Students often ___ in a hostel because it's cheap.",a:['stay'],why:'STAY family: stay in a hostel.'},
+  {q:'We want to ___ in a camper van and drive along the coast.',a:['stay'],why:'STAY family: stay in a camper van.'},
+  {q:'You can ___ in online the day before your flight.',a:['check','check in'],why:'CHECK IN family: check in online, at the airport, at a hotel.'},
+  {q:'When we arrive at the hotel, we ___ in at reception.',a:['check','check in'],why:'CHECK IN family: check in at a hotel.'},
+  {q:'You need to ___ in at the airport two hours before your flight.',a:['check','check in'],why:'CHECK IN family: check in at the airport.'},
+  {q:'Put on sun cream or you will ___ sunburnt!',a:['get'],why:'GET family: get sunburnt, get seasick, get lost.'},
+  {q:'I always ___ seasick on boats.',a:['get'],why:'GET family: get seasick = feel sick on a boat.'},
+  {q:"Take a map so you don't ___ lost in the forest.",a:['get'],why:'GET family: get lost.'}]},
+ {id:'4B',title:"Tilly's Postcard",skill:'Reading',topic:'Travel vocabulary',type:'mc',n:4,
+  text:'<p class="hd">Snowfall Bay</p><p>Dear Grandma Holly,</p><p>Greetings from Snowfall Bay! It\'s my favourite holiday <span class="sp">destination</span>. It\'s <span class="sp">high season</span> now, so there are lots of tourists and the hotels are very expensive. That\'s why I\'m staying in a small hostel. It has great <span class="sp">facilities</span>: a kitchen, a sauna and free hot chocolate!</p><p>Tomorrow I\'m going sightseeing. The most famous <span class="sp">sights</span> here are the Ice Palace and the Northern Lights. The local <span class="sp">currency</span> is the snowcoin, so I need to change my money at the bank.</p><p>My <span class="sp">baggage</span> is really heavy because I have all my camping <span class="sp">equipment</span> with me. Next week I want to visit Norland, but I need a <span class="sp">visa</span> to cross the <span class="sp">border</span>.</p><p>Love,<br>Tilly</p>',
+  instr:"Read Tilly's postcard. Answer the question.",
+  rule:'Find the key word of the question in the postcard, then read the sentence around it.',
+  pool:[
+  {q:'Why are the hotels expensive?',opts:["Because it's high season.","Because it's low season.",'Because they have a sauna.','Because Tilly is famous.'],why:'“High season” = the busy time of the year, when prices are high.'},
+  {q:'Where is Tilly staying?',opts:['In a small hostel','In an expensive hotel','At a campsite','In a camper van'],why:'The postcard says: “I\'m staying in a small hostel.”'},
+  {q:'Which one is NOT a facility at the hostel?',opts:['A swimming pool','A kitchen','A sauna','Free hot chocolate'],why:'The facilities are a kitchen, a sauna and free hot chocolate. There is no pool.'},
+  {q:'What is the snowcoin?',opts:['The money of Snowfall Bay','A famous sight','A type of hot chocolate','A train ticket'],why:'“Currency” = the money of a country or place.'},
+  {q:"Why is Tilly's baggage heavy?",opts:['Because she has all her camping equipment.','Because she bought lots of presents.','Because she has lots of books.','Because she has lots of snowcoins.'],why:'“Equipment” = the things you need for an activity, like a tent for camping.'},
+  {q:'What does Tilly need to cross the border into Norland?',opts:['A visa','A map','A ticket','Some snowcoins'],why:'A “visa” is a document that lets you enter some countries.'},
+  {q:'True, False or Doesn\'t say? There aren\'t many tourists in Snowfall Bay now.',opts:TF,fixed:true,a:1,why:'False. The postcard says “there are lots of tourists”.'},
+  {q:'True, False or Doesn\'t say? Tilly\'s hostel is next to the Ice Palace.',opts:TF,fixed:true,a:2,why:'The postcard doesn\'t say where the hostel is.'},
+  {q:'In the postcard, “sights” are…',opts:['famous places to visit','things you see in a dream','train tickets','the hostel\'s facilities'],why:'“Sights” = famous places that tourists visit, like the Ice Palace.'}]}],
+ codes:[
+  {a:['visa'],c:["It's a document. Some countries ask for it when you cross the border.",'It has 4 letters: V _ _ A.','Tilly needs one to visit Norland.']},
+  {a:['border'],c:["It's the line between two countries.",'It has 6 letters and it ends in -ER.','It starts with B.']},
+  {a:['currency'],c:["It's the money of a country, like the snowcoin or the Chilean peso.",'It has 8 letters and it ends in -CY.','It starts with C-U-R.']},
+  {a:['baggage'],c:['All the bags and suitcases that you take on a trip.','It has 7 letters: BAG + 4 more letters.','It ends in -AGE.']},
+  {a:['destination'],c:["It's the place where you are going on a trip.",'It has 11 letters and it ends in -TION.','It starts with D-E-S-T.']},
+  {a:['equipment'],c:['The things you need for an activity, like a tent and a torch for camping.','It has 9 letters and it ends in -MENT.','It starts with E-Q-U.']}]},
+
+{name:'The Hall of Memories',unit:'Unit 4 · Happy holidays',rune:'A',codeAsk:'Write the secret verb.',
+ story:'Old Christmas memories float in the air like snow. They all happened in the past… Write them correctly to open the door!',
+ trials:[
+ {id:'5A',title:'Frozen Memories',skill:'Writing',topic:'Past simple: affirmative',type:'type',n:4,
+  instr:'Write the verb in the past simple.',
+  rule:'Regular verbs add -ed (open → opened). Watch the spelling: stop → stopped, try → tried, arrive → arrived. Irregular verbs change: go → went, eat → ate.',
+  pool:[
+  {q:"Last Christmas we ___ (go) to my grandma's house in Chillán.",a:['went'],mis:{goed:'Go is irregular: go → went.'},why:'Go is irregular: go → went.'},
+  {q:'We ___ (travel) by bus for six hours.',a:['travelled','traveled'],why:'Regular: travel → travelled (British English doubles the l; American English writes traveled).'},
+  {q:'My little brother ___ (sleep) on the bus.',a:['slept'],mis:{sleeped:'Sleep is irregular: sleep → slept.'},why:'Sleep is irregular: sleep → slept.'},
+  {q:'At midnight, we ___ (open) our presents.',a:['opened'],why:'Regular: open → opened.'},
+  {q:'Grandma ___ (make) a delicious cake.',a:['made'],mis:{maked:'Make is irregular: make → made.'},why:'Make is irregular: make → made.'},
+  {q:'I ___ (stop) at the shop to buy cards.',a:['stopped'],why:'One vowel + one consonant at the end: double it. stop → stopped.'},
+  {q:'My cousin ___ (try) to make a snowman, but there was no snow!',a:['tried'],mis:{tryed:'Consonant + y → -ied: try → tried.'},why:'Consonant + y: change y to -ied. try → tried.'},
+  {q:'We ___ (eat) pan de pascua after dinner.',a:['ate'],mis:{eated:'Eat is irregular: eat → ate.'},why:'Eat is irregular: eat → ate.'},
+  {q:'Dad ___ (buy) a new board game for the family.',a:['bought'],mis:{buyed:'Buy is irregular: buy → bought.'},why:'Buy is irregular: buy → bought.'},
+  {q:'I ___ (see) fireworks from my bedroom window.',a:['saw'],mis:{seed:'See is irregular: see → saw.',seen:'“Seen” is the past participle. The past simple is “saw”.'},why:'See is irregular: see → saw.'},
+  {q:'My aunt ___ (arrive) late because her flight was delayed.',a:['arrived'],mis:{arriveed:'The verb ends in -e, so we add only -d: arrived.'},why:'The verb ends in -e, so we add only -d: arrive → arrived.'},
+  {q:'We ___ (have) a big dinner at 9 p.m.',a:['had'],mis:{haved:'Have is irregular: have → had.'},why:'Have is irregular: have → had.'},
+  {q:'My sister ___ (write) a letter to Santa.',a:['wrote'],mis:{writed:'Write is irregular: write → wrote.'},why:'Write is irregular: write → wrote.'},
+  {q:'Everybody ___ (sing) Christmas songs.',a:['sang'],mis:{singed:'Sing is irregular: sing → sang.',sung:'“Sung” is the past participle. The past simple is “sang”.'},why:'Sing is irregular: sing → sang.'}]},
+ {id:'5B',title:"Pip's Diary",skill:'Reading',topic:'Past simple: affirmative',type:'mc',n:4,
+  text:'<p class="hd">23 December</p><p>What a day! I woke up at 5 a.m. because the reindeer were noisy. I had breakfast quickly and went to the workshop. First, I painted 40 wooden trains. Then I tried to fix the big sleigh, but I couldn\'t find my tools. I looked everywhere! At 1 p.m., my friend Juniper found them under the Christmas tree.</p><p>In the afternoon, it started to snow, so we stopped work and made a snowman. We didn\'t have a carrot, so we used a pencil for his nose! In the evening, I felt tired but very happy. I went to bed at 8 p.m.</p><p>Pip, the toymaker elf</p>',
+  instr:"Read Pip's diary. Answer the question.",
+  rule:'Find the part of the diary that talks about the question. Look for the time words: at 5 a.m., at 1 p.m., in the afternoon, in the evening.',
+  pool:[
+  {q:'Why did Pip wake up early?',opts:['Because the reindeer were noisy.','Because he had to go to school.','Because it was snowing.','Because Juniper called him.'],why:'“I woke up at 5 a.m. because the reindeer were noisy.”'},
+  {q:'What did Pip paint?',opts:['40 wooden trains','The big sleigh','A snowman','40 Christmas cards'],why:'“First, I painted 40 wooden trains.”'},
+  {q:"Who found Pip's tools?",opts:['Juniper','Pip','The reindeer','Nix'],why:'“My friend Juniper found them.”'},
+  {q:'Where were the tools?',opts:['Under the Christmas tree','In the workshop','In the sleigh','In the snow'],why:'Juniper found them under the Christmas tree.'},
+  {q:'Why did they stop work?',opts:['Because it started to snow.','Because Pip was tired.','Because it was 1 p.m.','Because the sleigh was broken.'],why:'“It started to snow, so we stopped work.”'},
+  {q:"What did they use for the snowman's nose?",opts:['A pencil','A carrot','A paintbrush','A stone'],why:'“We didn\'t have a carrot, so we used a pencil.”'},
+  {q:'How did Pip feel in the evening?',opts:['Tired but happy','Sad and tired','Angry','Bored'],why:'“In the evening, I felt tired but very happy.”'},
+  {q:'True, False or Doesn\'t say? Pip fixed the sleigh in the morning.',opts:TF,fixed:true,a:1,why:'False. He tried, but he couldn\'t find his tools.'},
+  {q:'Which verb from the diary is REGULAR?',opts:['painted','went','found','made'],why:'Regular verbs add -ed: paint → painted. Went, found and made are irregular.'},
+  {q:'Which verb from the diary is IRREGULAR?',opts:['had','looked','stopped','tried'],why:'have → had is irregular. Looked, stopped and tried add -ed.'}]}],
+ codes:[
+  {a:['lost'],c:["I'm the past simple of a verb. The verb means “not find something anymore”.",'I have 4 letters and I rhyme with “frost”.','The verb is LOSE.']},
+  {a:['flew'],c:["I'm the past simple of a verb that birds and planes do in the sky.",'I have 4 letters and I rhyme with “new”.','The verb is FLY.']},
+  {a:['bought'],c:["I'm the past simple of a verb you do in a shop with money.",'I have 6 letters and I rhyme with “caught”.','The verb is BUY.']},
+  {a:['slept'],c:["I'm the past simple of a verb you do in bed at night.",'I have 5 letters and I rhyme with “kept”.','The verb is SLEEP.']},
+  {a:['wrote'],c:["I'm the past simple of a verb you do with a pen.",'I have 5 letters and I rhyme with “boat”.','The verb is WRITE.']},
+  {a:['took'],c:["I'm the past simple of the verb Nix did with the lantern: he ___ it!",'I have 4 letters and I rhyme with “book”.','The verb is TAKE.']}]},
+
+{name:'The Ice Mirror Room',unit:'Unit 4 · Happy holidays',rune:'L',codeAsk:'Write the question word.',
+ story:'A magic mirror asks questions and makes mistakes. Read the village newspaper and fix the mirror\'s sentences.',
+ trials:[
+ {id:'6A',title:'The Pinehollow News',skill:'Reading',topic:'Past simple: negatives & questions',type:'mc',n:4,
+  text:'<p class="hd">THE PINEHOLLOW NEWS · Interview with Captain Carrot, the snowman</p><p><b>Juniper:</b> Captain Carrot, did you see the Star Lantern last night?<br><b>Captain Carrot:</b> Yes, I did. I saw a small blue light near the tree at midnight.<br><b>Juniper:</b> Did you see Nix?<br><b>Captain Carrot:</b> No, I didn\'t. It was very dark and I didn\'t have my glasses!<br><b>Juniper:</b> What did you hear?<br><b>Captain Carrot:</b> I heard a little laugh and the sound of ice. Then the light went up to the Frostspire Tower.<br><b>Juniper:</b> Why didn\'t you call for help?<br><b>Captain Carrot:</b> Because I can\'t move! I\'m a snowman!<br><b>Juniper:</b> Where did the lantern go?<br><b>Captain Carrot:</b> It went to the top of the tower. I\'m sure!</p>',
+  instr:'Read the interview. Answer the question.',
+  rule:'Short answers: Yes, he did. / No, he didn\'t. Questions: (Wh-) + did + subject + base verb.',
+  pool:[
+  {q:'Did Captain Carrot see the Star Lantern?',opts:['Yes, he did.',"No, he didn't.",'Yes, he saw.','Yes, he does.'],why:'He says “Yes, I did.” Short answers use did. We don\'t say “Yes, he saw.”'},
+  {q:'Did he see Nix?',opts:["No, he didn't.",'Yes, he did.',"No, he don't.","No, he wasn't."],why:'He says “No, I didn\'t.” Short answer: No, he didn\'t.'},
+  {q:"Why didn't he see Nix?",opts:["It was dark and he didn't have his glasses.",'Nix was invisible.','He was asleep.','He was at home.'],why:'“It was very dark and I didn\'t have my glasses!”'},
+  {q:'What did he hear?',opts:['A little laugh and the sound of ice','A train and a bell','Music from the market','Nothing'],why:'“I heard a little laugh and the sound of ice.”'},
+  {q:"Why didn't he call for help?",opts:["Because he can't move.",'Because he was scared.',"Because he didn't see anything.",'Because it was late.'],why:'“Because I can\'t move! I\'m a snowman!”'},
+  {q:'Where did the lantern go?',opts:['To the top of the tower','To the market','Into the forest','Under the tree'],why:'“It went to the top of the tower.”'},
+  {q:'Which question is in the interview?',opts:['Did you see Nix?','Did you saw Nix?','You did see Nix?','Saw you Nix?'],why:'Question: Did + subject + BASE verb: Did you see…? (not saw).'},
+  {q:'What time did he see the light?',opts:['At midnight','At 8 p.m.','At 5 a.m.','In the morning'],why:'“I saw a small blue light near the tree at midnight.”'},
+  {q:"True, False or Doesn't say? Captain Carrot was asleep at midnight.",opts:TF,fixed:true,a:1,why:'False. He saw a light at midnight, so he was awake.'}]},
+ {id:'6B',title:"Fix the Mirror's Mistakes",skill:'Writing',topic:'Past simple: negatives & questions',n:[2,2],
+  instr:'Fix the mistakes, or put the words in order. Read the instructions in each task.',
+  rule:'Negative: subject + didn\'t + BASE verb (didn\'t go). Question: (Wh-) + did + subject + BASE verb (Did you see…?).',
+  pools:[[
+  {type:'fix',q:"Nix didn't [[went]] home last night.",a:['go'],why:"After didn't, use the base verb: didn't go."},
+  {type:'fix',q:'[[Do]] you see the frost sprite yesterday?',a:['did'],why:'“Yesterday” = the past. Past questions use Did.'},
+  {type:'fix',q:'She [[don\'t]] visit her grandma last Christmas.',a:["didn't",'did not'],mis:{"doesn't":'“Last Christmas” is the past: didn\'t.'},why:"Past negative: didn't + base verb, for everybody (I, you, she, they…)."},
+  {type:'fix',q:'Where did you [[went]] on holiday?',a:['go'],why:'After did, use the base verb: Where did you go?'},
+  {type:'fix',q:'Did they [[bought]] presents at the market?',a:['buy'],why:'After did, use the base verb: Did they buy…?'},
+  {type:'fix',q:"He didn't [[saw]] the reindeer.",a:['see'],why:"After didn't, use the base verb: didn't see."},
+  {type:'fix',q:'Did you [[enjoyed]] the parade?',a:['enjoy'],why:'After did, use the base verb: Did you enjoy…?'},
+  {type:'fix',q:'What time [[does]] the train arrive yesterday?',a:['did'],why:'“Yesterday” = the past, so we use did.'},
+  {type:'fix',q:'Did she get seasick? – Yes, she [[got]].',a:['did'],why:'Short answer: Yes, she did.'}],[
+  {type:'order',w:['where','did','you','go','on','holiday'],x:'went',p:'?',why:'Question: Where + did + you + BASE verb (go).'},
+  {type:'order',w:['did','you','get','lost','in','the','city'],x:'got',p:'?',why:'Question: Did + you + BASE verb (get).'},
+  {type:'order',w:['what','did','Nix','take','from','the','village'],x:'took',p:'?',why:'Question: What + did + Nix + BASE verb (take).'},
+  {type:'order',w:['we',"didn't",'stay','in','a','hotel'],x:'stayed',p:'.',why:"Negative: We + didn't + BASE verb (stay)."},
+  {type:'order',w:['why','did','the','train','stop'],x:'stopped',p:'?',why:'Question: Why + did + the train + BASE verb (stop).'},
+  {type:'order',w:['they',"didn't",'go','sightseeing','yesterday'],x:'went',p:'.',alt:["yesterday they didn't go sightseeing"],why:"Negative: They + didn't + BASE verb (go)."},
+  {type:'order',w:['when','did','your','plane','land'],x:'landed',p:'?',why:'Question: When + did + your plane + BASE verb (land).'},
+  {type:'order',w:['I',"didn't",'get','sunburnt','at','the','beach'],x:'got',p:'.',alt:["at the beach I didn't get sunburnt"],why:"Negative: I + didn't + BASE verb (get)."}]]}],
+ codes:[
+  {a:['where'],c:['The mirror shows an answer: “At the top of the tower.”','Write the question word: “___ did Nix hide the lantern?”','This question word asks about a place.']},
+  {a:['when'],c:['The mirror shows an answer: “On Christmas Eve, at midnight.”','Write the question word: “___ did Nix steal the lantern?”','This question word asks about time.']},
+  {a:['why'],c:['The mirror shows an answer: “Because he wanted some light.”','Write the question word: “___ did Nix take the lantern?”','This question word asks for a reason.']},
+  {a:['who'],c:['The mirror shows an answer: “Nix, the frost sprite!”','Write the question word: “___ stole the Star Lantern?”','This question word asks about a person.']},
+  {a:['what'],c:['The mirror shows an answer: “The Star Lantern.”','Write the question word: “___ did Nix steal?”','This question word asks about a thing.']}]},
+
+{name:'The Star Chamber',unit:'Units 3 + 4 · Final room',rune:'',codeCtx:'runes',codeAsk:'Write the magic word.',final:true,
+ story:'The Star Lantern is here, inside a crystal lock! This room mixes EVERYTHING you learned. Use it all to free the lantern.',
+ trials:[
+ {id:'7A',title:'Link the Lights',skill:'Reading',topic:'Conjunctions',type:'mc',n:4,
+  instr:'Read the sentence. Choose the best linking word.',
+  rule:'and = add · but = contrast · although = a surprising contrast · because = reason · so = result · so that = purpose.',
+  pool:[
+  {q:'The train was delayed, ___ we arrived late.',opts:['so','because','although'],why:'“So” shows a result: the train was delayed → we arrived late.'},
+  {q:'We took a taxi ___ it was snowing.',opts:['because','so','but'],why:'“Because” gives a reason: why did we take a taxi? It was snowing.'},
+  {q:'___ it was very cold, we went sightseeing.',opts:['Although','Because','So'],why:'“Although” joins two ideas that are a surprise together: cold, but we went out.'},
+  {q:'I left home early ___ I could catch the first bus.',opts:['so that','although','but'],why:'“So that” shows a purpose: why did I leave early? To catch the first bus.'},
+  {q:'I wanted to hire a bike, ___ the shop was closed.',opts:['but','so','because'],why:'“But” shows a contrast: I wanted to… but there was a problem.'},
+  {q:'We stayed in a hostel ___ it was cheap.',opts:['because','although','so'],why:'“Because” gives a reason: why a hostel? It was cheap.'},
+  {q:"Take a map ___ you don't get lost.",opts:['so that','because','but'],why:'“So that” shows a purpose: take a map → you don\'t get lost.'},
+  {q:'She got sunburnt ___ she used sun cream.',opts:['although','because','so'],why:'“Although” = surprise: she used sun cream, but she still got sunburnt.'},
+  {q:'We looked up the timetable ___ found the best route.',opts:['and','although','because'],why:'“And” adds another action.'},
+  {q:"The museum doesn't open on Mondays, ___ we went to the market.",opts:['so','although','because'],why:'“So” shows a result: the museum was closed → we went to the market.'},
+  {q:'___ the bus was full, we walked to the station.',opts:['Because','Although','So that'],why:'“Because” gives the reason: the bus was full → we walked.'}]},
+ {id:'7B',title:"Nix's Letter",skill:'Writing',topic:'Mixed review',type:'cloze',n:6,
+  instr:'Nix wrote a sorry letter to the village. Write ONE word in each gap. Use the clue.',
+  rule:'Read the whole sentence. Ask yourself: Is it the past or a timetable? Is it a phrase (set off, get off, go sightseeing)? Is it a linking word?',
+  text:'<p>Dear people of Pinehollow,</p><p>I\'m so sorry! Last night I {1} your Star Lantern. I {2} want to be bad: I was just cold and lonely. I hid the lantern in my tower {3} I wanted some light in my dark rooms.</p><p>Tonight, a brave lantern-keeper {4} off early, climbed all seven rooms and found it. {5} you see the light? It was beautiful!</p><p>Please come and visit me next year. The sleigh train {6} Pinehollow at 9:00 every morning. When you arrive, get {7} the train, cross {8} the bridge and {9} the second turning on the right. My tower is at the end of the street.</p><p>I would love to {10} sightseeing with you. {11} I am a frost sprite, I can be a good friend!</p><p>Merry Christmas,<br>Nix</p>',
+  gaps:{
+   1:{a:['took'],cue:'take',topic:'Past simple: affirmative',why:'“Last night” = the past. Take is irregular: take → took.'},
+   2:{a:["didn't",'did not'],cue:'negative',topic:'Past simple: negatives & questions',why:"Past negative: didn't + base verb (want)."},
+   3:{a:['because','as','since'],cue:'reason',topic:'Conjunctions',why:'“Because” gives a reason: why did Nix hide the lantern?'},
+   4:{a:['set'],cue:'start a journey: ___ off',topic:'Transport collocations',why:'“Set off” = start a journey. Set is irregular: set → set.'},
+   5:{a:['did'],cue:'past question',topic:'Past simple: negatives & questions',why:'Past question: Did + you + see?'},
+   6:{a:['leaves'],cue:'leave · timetable',topic:'Present simple for future',why:'Timetables use the present simple for the future: the train leaves at 9:00.'},
+   7:{a:['off'],cue:'leave the train',topic:'Verbs + prepositions',why:'“Get off” the train = leave it.'},
+   8:{a:['over'],cue:'go to the other side',topic:'Verbs + prepositions',why:'“Cross over” the bridge = go from one side to the other.'},
+   9:{a:['take'],cue:'directions verb',topic:'Directions',why:'Directions: take the second turning on the right.'},
+   10:{a:['go'],cue:'go / stay / get',topic:'Holiday chunks',why:'GO family: go sightseeing = visit famous places.'},
+   11:{a:['although','though'],cue:'surprising contrast',topic:'Conjunctions',why:'“Although” joins two ideas that are a surprise together: I\'m a frost sprite, but I can be a good friend.'}}}],
+ codes:[{a:['lantern'],c:['Your 7 golden runes make one magic word. Use every rune once.','The magic word is the thing that Nix took. Read the first lines of his letter!','It starts with L and ends with N.']}]}
+];
+const MAXPTS=ROOMS.reduce((s,R)=>s+R.trials.reduce((t,T)=>t+(Array.isArray(T.n)?T.n[0]+T.n[1]:T.n)*10,0)+30+20,0);
+const TOPICS=['Transport collocations','Verbs + prepositions','Directions','Present simple for future','Holiday chunks','Travel vocabulary','Past simple: affirmative','Past simple: negatives & questions','Conjunctions'];
+// ids
+ROOMS.forEach((R,ri)=>R.trials.forEach(T=>{T.room=ri;(T.pools||[T.pool||[]]).forEach((p,pi)=>p.forEach((it,k)=>{it.id=T.id+'-'+pi+'-'+k}));if(T.gaps)Object.entries(T.gaps).forEach(([g,o])=>{o.id=T.id+'-g'+g;o.gap=+g;o.type='cloze'})}));
+
+/* ============ PIXEL ART ============ */
+const PAL={k:'#14102e',w:'#ffffff',i:'#d4f1ff',b:'#7cc8ff',B:'#3a6fe0',n:'#232262',r:'#e8384f',R:'#9e1f3d',y:'#ffd34d',Y:'#e8900f',g:'#45c46a',G:'#1f7a48',s:'#f6c9a3',S:'#cf8f68',h:'#8a5634',H:'#4e2c1a',e:'#9aa3c7',E:'#5b6390',u:'#f5e2b8',U:'#c9a46a',p:'#b48cff'};
+const SP={
+hero:["......kkkk......","....kkrrrrkk....","...krrrrrrrrk...","..krrRRRRRRrrk..","..krRssssssRrk..","..krRskssksRrk..","..krRssrrssRrk..","..kRRyyyyyyRRk..",".krrrRwwwwRrrrk.",".krrrrRwwRrrrrk.","krrrrrrrrrrrrrrk","krRrrrrrrrrrrRrk","kssrrrrrrrrrrssk",".kkrrrrrrrrrrkk.","..krrrrrrrrrrk..","..kRRRRRRRRRRk..","...khhk..khhk...","...kHHk..kHHk..."],
+nix:[".......kk.......","......kbik......",".....kbbiik.....","....kbbbbiik....","...kbbbbbbbik...","..kkkkkkkkkkkk..","..kiiiiiiiiiik..","..kiwwkiiwwkik..","..kiwkkiiwkkik..","..kiiiiiiiiiik..","..kikiiiiiikik..","..kiikkkkkkiik..","...kiiiiiiiik...","....kbbbbbbk....","...kbbkbbkbbk...","....kk.kk.kk...."],
+heart:[".kkk.kkk.","krwrkrrrk","krwrrrrrk","krrrrrrRk",".krrrrRk.","..krrRk..","...kRk...","....k...."],
+star:["....k....","...kyk...","kkkkywkkk","kyyyyyyyk",".kyyyyyk.","..kyyyk..",".kyykyyk.",".kyk.kyk.",".kk...kk."],
+key:[".kkkk.......","kyyyyk......","kyk.ykkkkkkk","kyk.yyyyyyyk","kyyyykkykkyk",".kkkk..k..k."],
+lock:["...kkkk...","..kekkek..","..ke..ek..","..ke..ek..","kkkkkkkkkk","kyyyyyyyyk","kyyykkyyyk","kyyykkyyyk","kyyyyyyyyk","kYYYYYYYYk","kkkkkkkkkk"],
+scroll:["kkkkkkkkkkkk","kUUuuuuuuUUk",".kuuuuuuuuk.",".kukkkkkkuk.",".kuuuuuuuuk.",".kukkkkkuuk.",".kuuuuuuuuk.",".kukkkkkkuk.","kUUuuuuuuUUk","kkkkkkkkkkkk"],
+bulb:["..kkkk..",".kyyyyk.","kyywyyyk","kywyyyyk","kyyyyyyk",".kyyyyk.","..kYYk..","..keek..","..keek..","...kk..."],
+tree:["......y......",".....yYy.....","......k......",".....kgk.....","....kgggk....","...kgggrgk...","....kgGgk....","...kgygggk...","..kgggggGgk..","...kgggrgk...","..kggrggggGk.",".kgggggyggGgk","..kkgggggGkk.",".kgggbgggggGk","kgggggggrgggk","kkkkkkkkkkkkk",".....khk.....",".....kHk....."],
+gift:["..k...k..",".kyk.kyk.","..kykyk..","kkkkykkkk","krrryrrrk","krrryrrrk","kyyyyyyyk","krrryrrrk","kkkkkkkkk"],
+rune:["...kkkk...","..kyyyyk..",".kywyyyYk.","kywyyyyyYk","kyyyyyyyYk","kyyyyyyyYk","kyyyyyyyYk","kyyyyyyyYk","kYyyyyyYYk",".kYYYYYYk.","..kYYYYk..","...kkkk..."],
+lantern:["..kkk..",".k...k.","kkkkkkk","kyywyyk","kywwwyk","kyywyyk","kyyyyyk","kkkkkkk","..kYk.."]};
+SP.heroW=SP.hero.slice(0,16).concat(["..khhk....khhk..","..kHHk....kHHk.."]);
+function mk(rows,swap){const h=rows.length,w=Math.max(...rows.map(r=>r.length));const c=document.createElement('canvas');c.width=w;c.height=h;const g=c.getContext('2d');rows.forEach((r,y)=>{for(let x=0;x<r.length;x++){let ch=r[x];if(swap&&swap[ch])ch=swap[ch];const col=PAL[ch];if(!col)continue;g.fillStyle=col;g.fillRect(x,y,1,1)}});return c}
+const C={};for(const k in SP)C[k]=mk(SP[k]);
+C.heartE=mk(SP.heart,{r:'E',R:'n',w:'e'});C.treeOff=mk(SP.tree,{y:'e',Y:'E',r:'R',b:'E'});C.lockG=mk(SP.lock,{y:'E',Y:'n'});C.scrollG=mk(SP.scroll,{u:'E',U:'n'});
+function url(c,s){const o=document.createElement('canvas');o.width=c.width*s;o.height=c.height*s;const g=o.getContext('2d');g.imageSmoothingEnabled=false;g.drawImage(c,0,0,o.width,o.height);return o.toDataURL()}
+const IMG={heart:url(C.heart,4),heartE:url(C.heartE,4),scroll:url(C.scroll,3),scrollG:url(C.scrollG,3),lock:url(C.lock,3),lockG:url(C.lockG,3),bulb:url(C.bulb,3),rune:url(C.rune,4),star:url(C.star,4),key:url(C.key,4),nix:url(C.nix,6),lantern:url(C.lantern,8),hero:url(C.hero,5)};
+const icon=(k,w,alt='')=>`<img class="icon" src="${IMG[k]}" width="${w}" alt="${esc(alt)}">`;
+
+// 3x5 pixel font
+const F3={A:'010101111101101',B:'110101110101110',C:'011100100100011',D:'110101101101110',E:'111100110100111',F:'111100110100100',G:'011100101101011',H:'101101111101101',I:'111010010010111',K:'101101110101101',L:'100100100100111',M:'101111111101101',N:'110101101101101',O:'010101101101010',P:'110101110100100',R:'110101110101101',S:'011100010001110',T:'111010010010010',U:'101101101101111',W:'101101111111101',Y:'101101010010010','0':'111101101101111','1':'010110010010111','2':'110001010100111','3':'110001010001110','4':'101101111001001','5':'111100110001110','7':'111001010010010','8':'111101111101111','9':'111101111001110',':':'000010000010000'};
+function ptext(g,s,x,y,col){g.fillStyle=col;[...s].forEach((ch,i)=>{const f=F3[ch];if(!f)return;for(let k=0;k<15;k++)if(f[k]==='1')g.fillRect(x+i*4+k%3,y+Math.floor(k/3),1,1)})}
+function rect(g,c,x,y,w,h){g.fillStyle=c;g.fillRect(Math.round(x),Math.round(y),Math.round(w),Math.round(h))}
+function line(g,x0,y0,x1,y1,c){const n=Math.max(Math.abs(x1-x0),Math.abs(y1-y0))||1;g.fillStyle=c;for(let i=0;i<=n;i++)g.fillRect(Math.round(x0+(x1-x0)*i/n),Math.round(y0+(y1-y0)*i/n),1,1)}
+
+const LOOK=[
+ {wall:'#3d4384',mort:'#272b5e',hi:'#4d55a3',floor:'#4a3d6e',fl2:'#3a2f59'},
+ {wall:'#41497a',mort:'#2a2f55',hi:'#525c96',floor:'#5a4630',fl2:'#47361f'},
+ {wall:'#3a4a7d',mort:'#253159',hi:'#4b5e9b',floor:'#3f4a5e',fl2:'#2f3848'},
+ {wall:'#4a3f73',mort:'#2f2850',hi:'#5d5191',floor:'#5c3b2c',fl2:'#47291c'},
+ {wall:'#463a6e',mort:'#2c234b',hi:'#58498a',floor:'#4f2f45',fl2:'#3c2235'},
+ {wall:'#34557f',mort:'#21385a',hi:'#45709f',floor:'#3b5f80',fl2:'#2c4a66'},
+ {wall:'#2f2a66',mort:'#1d1946',hi:'#3f3883',floor:'#3a3170',fl2:'#2b2458'}];
+const BOOKC=['#e8384f','#3a6fe0','#45c46a','#ffd34d','#b48cff','#7cc8ff','#e8900f'];
+function torch(g,x,y,t){rect(g,'#14102e',x-1,y+5,4,2);rect(g,'#8a5634',x,y+2,2,8);const f=Math.floor(t*8)%3;g.fillStyle='rgba(255,211,77,0.07)';g.fillRect(x-3,y-8,8,14);g.fillRect(x-5,y-6,12,10);g.fillRect(x-6,y-4,14,6);rect(g,'#e8900f',x-1,y-4+(f===1?1:0),4,6-(f===1?1:0));rect(g,'#ffd34d',x,y-2+(f===2?1:0),2,3);rect(g,'#fff',x,y-3+f%2,1,1)}
+function windowArt(g,x,y,t){rect(g,'#9aa3c7',x-2,y-1,26,29);rect(g,'#c7cde6',x-2,y-1,26,1);rect(g,'#0b0a26',x,y+1,22,25);rect(g,'#16154a',x,y+14,22,12);rect(g,'#fff4c2',x+15,y+4,4,4);rect(g,'#e8d79a',x+16,y+5,1,1);[[3,5],[8,3],[11,9],[5,11],[18,12]].forEach(([a,b])=>rect(g,'#cfd8ff',x+a,y+b,1,1));
+ for(let k=0;k<9;k++){const px=x+((k*7.3+t*2)%22),py=y+1+((k*9.7+t*9)%25);rect(g,'#fff',Math.floor(px),Math.floor(py),1,1)}
+ rect(g,'#9aa3c7',x+10,y+1,2,25);rect(g,'#9aa3c7',x,y+12,22,2);rect(g,'#fff',x-3,y+26,28,2);
+ rect(g,LOOKcur.wall,x-2,y-1,3,1);rect(g,LOOKcur.wall,x-2,y,1,1);rect(g,LOOKcur.wall,x+21,y-1,3,1);rect(g,LOOKcur.wall,x+23,y,1,1)}
+let LOOKcur=LOOK[0];
+function door(g,x,y,p){rect(g,'#14102e',x-1,y+3,30,40);rect(g,'#9aa3c7',x,y+4,28,38);rect(g,'#9aa3c7',x+4,y,20,4);rect(g,'#9aa3c7',x+2,y+2,24,2);rect(g,'#c7cde6',x+4,y,20,1);
+ rect(g,'#0e0d2b',x+3,y+5,22,37);rect(g,'#0e0d2b',x+6,y+3,16,2);
+ if(p>0){g.fillStyle=`rgba(255,211,77,${0.25+p*0.5})`;g.fillRect(x+3,y+5,22,37);for(let k=0;k<5;k++){g.fillStyle=`rgba(255,240,170,${p*0.5})`;g.fillRect(x+5+k*4,y+6,1,35)}}
+ const w=Math.round(22*(1-p));if(w>0){rect(g,'#8a5634',x+3,y+5,w,37);for(let k=x+3;k<x+3+w;k+=5)rect(g,'#4e2c1a',k,y+5,1,37);rect(g,'#5b6390',x+3,y+12,w,2);rect(g,'#5b6390',x+3,y+32,w,2);if(p===0){rect(g,'#14102e',x+16,y+21,6,8);rect(g,'#ffd34d',x+17,y+22,4,6);rect(g,'#14102e',x+18,y+24,2,3)}}}
+const DECOR=[
+(g,t)=>{const x=92,y=24;rect(g,'#14102e',x-1,y-1,32,35);rect(g,'#9aa3c7',x,y,30,33);rect(g,'#c7cde6',x,y,30,1);rect(g,'#e8384f',x,y+2,30,7);ptext(g,'TICKETS',x+2,y+3,'#ffd34d');rect(g,'#14102e',x+4,y+11,22,10);rect(g,'#7cc8ff',x+5,y+12,20,8);for(let k=0;k<8;k++)rect(g,'#fff',x+6+((k*5)%18),y+13+((k*3)%6),1,1);line(g,x+8,y+12,x+13,y+19,'#d4f1ff');rect(g,'#14102e',x+9,y+24,12,2);rect(g,'#f5e2b8',x+12,y+26,6,4);rect(g,'#ffd34d',x+4,y+23,3,3);rect(g,'#e8384f',x+23,y+23,3,3);rect(g,'#5b6390',x,y+30,30,3);rect(g,'#fff',x-1,y-3,32,2);for(let k=0;k<7;k++)rect(g,'#d4f1ff',x+2+k*4,y+9,1,1+(k%3));
+ rect(g,'#8a5634',134,46,38,3);rect(g,'#8a5634',134,38,38,3);rect(g,'#4e2c1a',136,49,2,9);rect(g,'#4e2c1a',168,49,2,9);rect(g,'#4e2c1a',136,41,2,5);rect(g,'#4e2c1a',168,41,2,5);g.drawImage(C.gift,150,37)},
+(g,t)=>{const x=86,y=13,w=68,h=33;rect(g,'#14102e',x-1,y-1,w+2,h+2);rect(g,'#c9a46a',x,y,w,h);rect(g,'#f5e2b8',x+2,y+2,w-4,h-4);rect(g,'#9aa3c7',x+3,y+16,w-6,2);rect(g,'#9aa3c7',x+22,y+3,2,h-6);rect(g,'#9aa3c7',x+46,y+3,2,h-6);
+ [[6,6,'#b8612c'],[27,6,'#4a5fc9'],[36,6,'#a63d86'],[51,6,'#2f7f6a'],[6,21,'#c73a55'],[27,21,'#2f86bd'],[36,21,'#b27a12'],[51,21,'#b2449f']].forEach(([a,b,c])=>rect(g,c,x+a,y+b,8,7));
+ if(Math.floor(t*2)%2===0){line(g,x+28,y+21,x+34,y+27,'#e8384f');line(g,x+34,y+21,x+28,y+27,'#e8384f')}ptext(g,'N',x+w-7,y+3,'#14102e');rect(g,'#ffd34d',x+1,y+1,2,2);rect(g,'#ffd34d',x+w-3,y+1,2,2);
+ rect(g,'#8a5634',98,49,44,3);rect(g,'#4e2c1a',100,52,2,6);rect(g,'#4e2c1a',138,52,2,6);rect(g,'#f5e2b8',108,46,14,3);rect(g,'#c9a46a',108,46,2,3)},
+(g,t)=>{const cx=106,cy=28,r=13;for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){const d=dx*dx+dy*dy;if(d>r*r)continue;g.fillStyle=d>(r-1)*(r-1)?'#14102e':d>(r-3)*(r-3)?'#ffd34d':'#f5e2b8';g.fillRect(cx+dx,cy+dy,1,1)}
+ for(let k=0;k<12;k++){const a=k*Math.PI/6;rect(g,'#14102e',Math.round(cx+Math.cos(a)*8),Math.round(cy+Math.sin(a)*8),1,1)}
+ const ma=t*0.6-Math.PI/2,ha=t*0.05-Math.PI/2;line(g,cx,cy,Math.round(cx+Math.cos(ma)*8),Math.round(cy+Math.sin(ma)*8),'#14102e');line(g,cx,cy,Math.round(cx+Math.cos(ha)*5),Math.round(cy+Math.sin(ha)*5),'#e8384f');
+ const bx=128,by=15;rect(g,'#5b6390',bx-1,by-1,48,33);rect(g,'#14102e',bx,by,46,31);ptext(g,'TRAINS',bx+11,by+2,'#fff');rect(g,'#5b6390',bx+2,by+8,42,1);
+ ptext(g,'17:15',bx+3,by+11,'#ffd34d');ptext(g,'2',bx+40,by+11,'#ffd34d');ptext(g,'19:30',bx+3,by+18,'#ffd34d');ptext(g,'3',bx+40,by+18,'#ffd34d');ptext(g,'21:10',bx+3,by+25,Math.floor(t*2)%2?'#e8384f':'#ffd34d');ptext(g,'4',bx+40,by+25,'#ffd34d');
+ rect(g,'#9aa3c7',120,55,58,1);for(let k=0;k<8;k++)rect(g,'#4e2c1a',122+k*7,56,3,2)},
+(g,t)=>{[84,130].forEach((x,si)=>{rect(g,'#4e2c1a',x,18,30,40);rect(g,'#2b1a10',x+2,20,26,36);[30,43,56].forEach((sy,ri)=>{let cx=x+3;while(cx<x+27){const v=hash(cx+si*7,ri),bw=2+Math.floor(v*2),bh=7+Math.floor(hash(cx,ri+5)*3);rect(g,BOOKC[Math.floor(hash(cx,ri+si)*7)],cx,sy-bh,bw,bh);rect(g,'#ffffff33',cx,sy-bh,bw,1);cx+=bw+(v>.8?1:0)}rect(g,'#8a5634',x+2,sy,26,2)})});
+ const by=26+Math.round(Math.sin(t*2)*2);rect(g,'#14102e',115,by-1,12,8);rect(g,'#f5e2b8',116,by,5,6);rect(g,'#fff',121,by,5,6);for(let k=0;k<3;k++){rect(g,'#9aa3c7',117,by+1+k*2,3,1);rect(g,'#9aa3c7',122,by+1+k*2,3,1)}
+ if(Math.floor(t*3)%2)rect(g,'#ffd34d',113,by-3,1,1);else rect(g,'#ffd34d',128,by+2,1,1)},
+(g,t)=>{[84,110,136].forEach((x,k)=>{rect(g,'#14102e',x-1,15,22,20);rect(g,'#ffd34d',x,16,20,18);rect(g,'#e8900f',x,33,20,1);rect(g,'#1b2a6b',x+2,18,16,14);
+ if(k===0){rect(g,'#1f7a48',x+9,21,2,2);rect(g,'#1f7a48',x+7,23,6,3);rect(g,'#45c46a',x+5,26,10,3);rect(g,'#8a5634',x+9,29,2,2);rect(g,'#ffd34d',x+9,20,2,1)}
+ if(k===1){rect(g,'#fff',x+8,21,4,4);rect(g,'#fff',x+7,25,6,6);rect(g,'#14102e',x+9,22,1,1);rect(g,'#14102e',x+11,22,1,1);rect(g,'#e8900f',x+10,23,2,1);rect(g,'#e8384f',x+7,25,6,1)}
+ if(k===2)g.drawImage(C.gift,x+6,21)});
+ [94,150].forEach(x=>{rect(g,'#9aa3c7',x-2,52,7,6);rect(g,'#f5e2b8',x,44,3,8);const f=Math.floor(t*8+x)%2;rect(g,'#e8900f',x,40+f,3,4-f);rect(g,'#ffd34d',x+1,41+f,1,2)});
+ for(let k=0;k<5;k++){const bx=96+k*12+Math.round(Math.sin(t+k)*2),by=56-((t*6+k*11)%42);g.fillStyle='rgba(143,211,255,0.65)';g.fillRect(Math.round(bx),Math.round(by),3,3);rect(g,'#fff',Math.round(bx),Math.round(by),1,1)}},
+(g,t)=>{const cx=120,cy=31,rx=14,ry=20;for(let y=cy-ry-2;y<=cy+ry+2;y++)for(let x=cx-rx-2;x<=cx+rx+2;x++){const e=((x-cx)/rx)**2+((y-cy)/ry)**2;if(e>1.16)continue;let c;if(e>1)c='#14102e';else if(e>0.78)c=(x+y)%3?'#d4f1ff':'#7cc8ff';else c=((x+y+Math.floor(t*10))%18<3)?'#d4f1ff':(y<cy?'#5d8fe0':'#3a6fe0');g.fillStyle=c;g.fillRect(x,y,1,1)}
+ rect(g,'#9aa3c7',cx-2,cy+ry+1,4,5);rect(g,'#9aa3c7',cx-9,55,18,3);rect(g,'#c7cde6',cx-9,55,18,1);
+ [[98,14],[143,20],[100,46],[141,44]].forEach(([x,y],k)=>{if((Math.floor(t*3)+k)%3===0){rect(g,'#fff',x,y-1,1,3);rect(g,'#fff',x-1,y,3,1)}});
+ g.globalAlpha=0.35;g.drawImage(C.hero,cx-8,cy-6);g.globalAlpha=1},
+(g,t)=>{rect(g,'#9aa3c7',102,52,36,6);rect(g,'#c7cde6',102,52,36,1);rect(g,'#9aa3c7',107,48,26,4);rect(g,'#9aa3c7',114,38,12,10);rect(g,'#5b6390',114,46,12,2);
+ const p=S.anim&&S.anim.kind==='door'?clamp((performance.now()-S.anim.t0)/700,0,1):0;
+ for(let k=0;k<8;k++){const a=k*Math.PI/4+t*0.4;for(let d=10;d<22;d+=3){g.fillStyle='rgba(255,211,77,0.45)';g.fillRect(Math.round(120+Math.cos(a)*d),Math.round(24+Math.sin(a)*d),1,1)}}
+ g.globalAlpha=1-p*0.8;for(let dy=-13;dy<=13;dy++){const hw=Math.round(10-Math.abs(dy)*10/13);for(let dx=-hw;dx<=hw;dx++){g.fillStyle=(Math.abs(dx)===hw||Math.abs(dy)===13)?'#14102e':((dx+dy+Math.floor(t*6))%7===0?'#d4f1ff':'#7cc8ff');g.fillRect(120+dx,24+dy,1,1)}}g.globalAlpha=1;
+ g.drawImage(C.lantern,117,20);if(Math.floor(t*4)%2){rect(g,'#fff',106,12,1,1);rect(g,'#fff',135,30,1,1)}}];
+
+const STARS=Array.from({length:70},(_,i)=>[Math.floor(hash(i,1)*240),Math.floor(hash(i,2)*72),hash(i,3)*6]);
+const SNOW=Array.from({length:80},(_,i)=>[hash(i,4)*240,hash(i,5)*135,.5+hash(i,6),hash(i,7)*6]);
+function drawRoom(cv,ri,t){const g=cv.getContext('2d');g.imageSmoothingEnabled=false;const W=240,F=58,L=LOOK[ri];LOOKcur=L;
+ rect(g,L.wall,0,0,W,F);for(let row=0,y=0;y<F;row++,y+=6){const off=row%2?6:0;for(let x=-off;x<W;x+=12){rect(g,L.mort,x,y,12,1);rect(g,L.mort,x,y,1,6);if(hash(x,row)>.72)rect(g,L.hi,x+1,y+1,11,1)}}
+ for(let x=0;x<W;x+=4){rect(g,'#d4f1ff',x,0,3,2);rect(g,'#d4f1ff',x+1,2,1,1+Math.floor(hash(x,99)*4))}
+ for(let x=0;x<W;x++){const y=5+Math.round(3*Math.sin((x%60)/60*Math.PI));rect(g,'#1f7a48',x,y,1,2);if(x%10===5){rect(g,['#e8384f','#ffd34d','#7cc8ff'][Math.floor(x/10)%3],x-1,y+2,3,3);if(Math.floor(t*2+x/10)%3===0)rect(g,'#fff',x,y+2,1,1)}}
+ windowArt(g,34,13,t);torch(g,72,24,t);torch(g,186,24,t);
+ rect(g,L.floor,0,F,W,14);rect(g,'#ffffff30',0,F,W,1);for(let x=0;x<W;x+=12)rect(g,L.fl2,x,F+1,1,13);rect(g,L.fl2,0,F+7,W,1);rect(g,'#e8f4ff',0,F,10,3);rect(g,'#e8f4ff',230,F,10,3);
+ DECOR[ri](g,t);
+ let p=0,hx=10;if(S.anim&&S.anim.kind==='door'){const e=performance.now()-S.anim.t0;p=clamp(e/700,0,1);hx=10+Math.round(176*clamp((e-500)/1100,0,1))}
+ door(g,198,16,p);
+ if(ri<6){const ny=12+Math.round(Math.sin(t*3)*2);if(!(S.anim&&S.anim.kind==='door'))g.drawImage(C.nix,170,ny)}else g.drawImage(C.nix,146,30+Math.round(Math.sin(t*3)*2));
+ const walking=S.anim&&S.anim.kind==='door'&&hx>10&&hx<186;g.drawImage(walking&&Math.floor(t*8)%2?C.heroW:C.hero,hx,40)}
+function drawTitle(cv,t,won){const g=cv.getContext('2d');g.imageSmoothingEnabled=false;const W=240,H=135;
+ const bands=['#0b0a26','#121040','#1a1856','#24216b','#2f2b80'];bands.forEach((c,i)=>{rect(g,c,0,i*18,W,18);if(i){g.fillStyle=bands[i-1];for(let x=0;x<W;x+=2)g.fillRect(x+(i%2),i*18,1,1)}});rect(g,bands[4],0,90,W,45);
+ for(let x=0;x<W;x++){const y=Math.round(22+6*Math.sin(x/18+t*.5)+3*Math.sin(x/7));g.fillStyle='rgba(90,230,220,0.18)';g.fillRect(x,y,1,7);g.fillStyle='rgba(143,211,255,0.14)';g.fillRect(x,y+7,1,4)}
+ STARS.forEach(([x,y,ph])=>{const on=Math.sin(t*2+ph)>-.3;rect(g,on?'#fff':'#8fd3ff',x,y,1,1);if(ph>5.4&&on){rect(g,'#cfd8ff',x-1,y,3,1);rect(g,'#cfd8ff',x,y-1,1,3)}});
+ for(let dy=-9;dy<=9;dy++)for(let dx=-9;dx<=9;dx++)if(dx*dx+dy*dy<=81){g.fillStyle=(dx*dx+dy*dy>64)?'#e8d79a':'#fff4c2';g.fillRect(36+dx,24+dy,1,1)}rect(g,'#e8d79a',33,21,3,2);rect(g,'#e8d79a',39,27,2,2);
+ for(let x=0;x<W;x++){const h=Math.round(76+10*Math.sin(x/23)+6*Math.sin(x/9+1));rect(g,'#232060',x,h,1,H-h);if(h<69){rect(g,'#cfd8ff',x,h,1,69-h);if(x%2)rect(g,'#9aa8e8',x,69,1,1)}const h2=Math.round(94+6*Math.sin(x/15+2)+4*Math.sin(x/7));rect(g,'#1a184c',x,h2,1,H-h2)}
+ const tx=154,tw=28;for(let k=0;k<7;k++){const y=112-11*(k+1);rect(g,'#14102e',tx-1,y,tw+2,11);rect(g,'#5b6390',tx,y+1,tw,10);for(let bx=tx+(k%2?3:0);bx<tx+tw;bx+=7)rect(g,'#3d4384',bx,y+1,1,10);rect(g,'#9aa3c7',tx-2,y,tw+4,1);const lit=won||(S.done||0)>k;rect(g,'#14102e',tx+10,y+3,8,7);rect(g,lit?'#ffd34d':'#1b2a6b',tx+11,y+4,6,6);if(lit)rect(g,'#fff3b0',tx+11,y+4,2,2)}
+ for(let i=0;i<10;i++){const w=32-3*i,y=34-2*i;rect(g,'#3a6fe0',tx+tw/2-w/2,y,w,2);rect(g,'#7cc8ff',tx+tw/2-w/2,y,Math.ceil(w/2),2)}
+ const gl=won?0:Math.round(2+Math.sin(t*3)*1.5);if(won){g.drawImage(C.star,tx+tw/2-4,6)}else{g.fillStyle='rgba(212,241,255,0.35)';g.fillRect(tx+tw/2-4-gl,10-gl,8+2*gl,8+2*gl);rect(g,'#d4f1ff',tx+tw/2-2,12,4,4)}
+ [[8,98,'#e8384f'],[30,101,'#1f7a48'],[100,99,'#3a6fe0'],[122,102,'#e8384f']].forEach(([x,y,c],k)=>{rect(g,'#14102e',x-1,y-1,20,16);rect(g,'#8a5634',x,y,18,14);for(let py=y+3;py<y+14;py+=3)rect(g,'#6b3e26',x,py,18,1);for(let i=0;i<6;i++){rect(g,c,x-2+i*1,y-1-i*1.5,22-i*2,2)}rect(g,'#fff',x+2,y-10,14,2);rect(g,'#14102e',x+3,y+4,6,6);rect(g,'#ffd34d',x+4,y+5,4,4);rect(g,'#e8900f',x+6,y+5,1,4);rect(g,'#4e2c1a',x+11,y+6,4,8);rect(g,'#5b6390',x+13,y-12,3,6);for(let s=0;s<3;s++){const sy=y-14-((t*6+s*5+k*3)%14),sx=x+14+Math.round(Math.sin(t+s+k)*2);g.fillStyle='rgba(220,230,255,0.5)';g.fillRect(sx,Math.round(sy),2,2)}});
+ for(let x=0;x<W;x++){const gy=Math.round(113+3*Math.sin(x/17)+2*Math.sin(x/6));rect(g,'#e8f4ff',x,gy,1,H-gy);rect(g,'#fff',x,gy,1,1);for(let y=gy+8;y<H;y+=2)if((x+y)%4===0)rect(g,'#c8dcf5',x,y,1,1)}
+ g.drawImage(won?C.tree:C.treeOff,56,80,26,36);if(won&&Math.floor(t*3)%2){rect(g,'#fff',61,95,1,1);rect(g,'#fff',74,103,1,1)}
+ g.drawImage(C.hero,88,99);if(won){g.drawImage(C.lantern,104,105);g.drawImage(C.nix,124,98+Math.round(Math.sin(t*3)*2))}else g.drawImage(C.nix,tx+tw+6,18+Math.round(Math.sin(t*3)*2));
+ if(won)[[40,30,0],[112,22,1.3],[206,40,2.6]].forEach(([cx,cy,o],k)=>{const r=((t+o)*22)%34;if(r>24)return;for(let i=0;i<12;i++){const a=i*Math.PI/6;g.fillStyle=['#ffd34d','#e8384f','#7cc8ff','#45c46a'][(i+k)%4];g.fillRect(Math.round(cx+Math.cos(a)*r),Math.round(cy+Math.sin(a)*r+r*r*0.01),2,2)}});
+ SNOW.forEach(([sx,sy,sp,ph])=>{const x=((sx+Math.sin(t+ph)*3+t*4)%W+W)%W,y=(sy+t*12*sp)%H;rect(g,'#fff',Math.floor(x),Math.floor(y),1,1)})}
+
+/* ============ SOUND ============ */
+let AC=null,sound=store.get('xer_snd')!=='off';
+function beep(seq){if(!sound)return;try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();if(AC.state==='suspended')AC.resume();const t0=AC.currentTime;seq.forEach(([f,d,st])=>{const o=AC.createOscillator(),gn=AC.createGain();o.type='square';o.frequency.value=f;gn.gain.setValueAtTime(0.045,t0+st);gn.gain.exponentialRampToValueAtTime(0.0001,t0+st+d);o.connect(gn).connect(AC.destination);o.start(t0+st);o.stop(t0+st+d+0.03)})}catch(e){}}
+const SFX={ok:[[660,.08,0],[880,.08,.08],[1320,.14,.16]],bad:[[220,.15,0],[160,.25,.13]],click:[[520,.04,0]],door:[[523,.1,0],[659,.1,.1],[784,.1,.2],[1047,.35,.3]],clue:[[880,.06,0],[1175,.14,.07]],freeze:[[400,.1,0],[300,.1,.1],[200,.3,.2]]};
+
+/* ============ STATE ============ */
+const S={paused:false,anim:null,done:0};
+let screen='start',heartsMax=3,lastT=performance.now(),P=null;
+function show(id){screen=id;['start','game','win'].forEach(k=>$('#'+k).hidden=k!==id);$('#hud').hidden=id!=='game';window.scrollTo(0,0);dirty=true}
+function newGame(){Object.assign(S,{seenRoom:-1,seen:new Set(),room:0,score:0,log:[],codeLog:[],runes:[],errors:new Map(),hintsUsed:0,heartsLost:0,frozen:0,elapsed:0,roomStats:[],done:0,paused:false,anim:null,name:$('#nameIn').value.trim()});show('game');startRoom(0)}
+function pick(pool,n,avoid){const fresh=shuffle(pool.filter(x=>!avoid.has(x.id||x))),old=shuffle(pool.filter(x=>avoid.has(x.id||x)));return fresh.concat(old).slice(0,n)}
+function startRoom(i){const R=ROOMS[i];const retry=S.seenRoom===i;const avoid=retry?S.seen:new Set();const prevCode=retry?S.code:null;Object.assign(S,{room:i,hearts:heartsMax,roomScore:0,roomLost:0,phase:-1,itemIdx:0,clues:[false,false,false],codeTries:0,codeNear:false,runeTemp:false,anim:null});dirty=true;
+ S.sets=R.trials.map(T=>buildSet(T,avoid));const cs=R.codes.filter(c=>c!==prevCode);S.code=cs.length?cs[rnd(cs.length)]:R.codes[0];S.seenRoom=i;S.seen=new Set(S.sets.flat().map(o=>o.id));hud();rail();roomIntro()}
+function buildSet(T,avoid=new Set()){let items;if(T.type==='cloze'){items=pick(Object.values(T.gaps),T.n,avoid).sort((a,b)=>a.gap-b.gap)}else if(T.pools)items=shuffle(T.pools.flatMap((p,k)=>pick(p,T.n[k],avoid)));else items=pick(T.pool,T.n,avoid);
+ const set=items.map(it=>prep(it,T));if(T.autoBank){const ans=[...new Set(set.map(o=>o.a[0]))];set.bank=shuffle(ans.concat(sample(T.extra.filter(x=>!ans.includes(x)),2)))}return set}
+function prep(it,T){const o=Object.assign({},it,{src:it,T,type:it.type||T.type});
+ if(o.type==='mc'){const corr=o.opts[o.a||0];o.choices=o.fixed?o.opts.slice():shuffle(o.opts);o.ci=o.choices.indexOf(corr)}
+ if(o.type==='map'){o.choices=shuffle([o.a].concat(sample(MAP.places.map(p=>p.n).filter(n=>n!==o.a),3)));o.ci=o.choices.indexOf(o.a)}
+ if(o.type==='order')o.tiles=shuffle(o.w.concat(o.x?[o.x]:[]).map((w,k)=>({w,k,extra:k===o.w.length})));
+ return o}
+
+/* ============ HUD + RAIL ============ */
+function hud(){$('#hearts').innerHTML=Array.from({length:heartsMax},(_,i)=>`<img class="icon" src="${i<S.hearts?IMG.heart:IMG.heartE}" alt="">`).join('');$('#hearts').setAttribute('aria-label',`${S.hearts} of ${heartsMax} hearts left`);
+ $('#score').textContent=S.score;$('#rlab').textContent=`Room ${S.room+1} · ${ROOMS[S.room].name}`;
+ const done=S.room*3+clamp(S.phase,0,3);$('#prog').innerHTML=ROOMS.map((R,r)=>`<div class="seg">${[0,1,2].map(k=>{const n=r*3+k;return `<i class="${n<done?'done':n===done?'now':''}"></i>`}).join('')}</div>`).join('');
+ const stage=S.phase<0?'Room intro':S.phase<2?`Trial ${S.phase+1} of 2`:S.phase===2?'Door code':'Door open';$('#plab').textContent=`Room ${S.room+1} of 7 · ${stage} · ${Math.round(done/21*100)}% of the tower`}
+function rail(){const R=ROOMS[S.room];const cl=[0,1,2].map(k=>{const open=S.clues[k]&&(S.phase>=0);const lab=k<2?`Clue ${k+1}`:'Bonus clue';const lockTxt=k<2?`Finish trial ${k+1} to unlock it.`:'Unlocks after a wrong door code.';return `<li class="${open?'':'lock'}">${icon(open?'scroll':'scrollG',30)}<span><b>${lab}:</b> ${open?esc(S.code.c[k]):lockTxt}</span></li>`}).join('');
+ const runes=ROOMS.map((Rm,k)=>{const letter=k<6?Rm.rune:'N';const have=k<6?S.runes.includes(k):S.runeTemp;return have?`<span class="rune" title="Rune ${letter}"><img src="${IMG.rune}" alt=""><b>${letter}</b></span>`:`<span class="rune empty"><b>?</b></span>`}).join('');
+ $('#rail').innerHTML=`<div class="px"><h3>Clues for this door</h3><ol class="clues">${cl}</ol></div><div class="px"><h3>Golden runes</h3><div class="runes" aria-label="Golden runes collected">${runes}</div><p class="mini" style="margin-top:8px">You need all 7 runes for the last lock.</p></div><div class="px"><h3>This room</h3><p class="mini">${esc(R.unit)}</p><p class="mini">Points in this room: <b>${S.roomScore}</b> · Hearts lost: <b>${S.roomLost}</b></p><button class="btn ghost sm" data-act="how">How to play</button></div>`}
+
+/* ============ ROOM INTRO ============ */
+function roomIntro(){S.phase=-1;hud();const R=ROOMS[S.room];
+ const tl=R.trials.map((T,k)=>`<li><b>Trial ${k+1}: ${esc(T.title)}</b> · ${T.skill} · ${esc(T.topic)}</li>`).join('');
+ card(`<div class="ch"><span class="tag">Room ${S.room+1} of 7</span><span class="tag tp">${esc(R.unit)}</span></div><h2>${esc(R.name)}</h2><p class="ins">${esc(R.story)}</p><ul class="mini" style="padding-left:20px;margin:10px 0 16px">${tl}<li><b>Then:</b> read your clues and write the door code.</li></ul><div class="row"><button class="btn" id="goTrial">Start trial 1 ▶</button></div>`);
+ $('#goTrial').onclick=()=>{beep(SFX.click);S.phase=0;S.itemIdx=0;hud();rail();askCurrent()};$('#goTrial').focus({preventScroll:true})}
+function card(html){$('#card').innerHTML=html}
+
+/* ============ QUESTION RENDERING ============ */
+const fmt=s=>esc(s).replace(/\[\[(.+?)\]\]/g,'<mark>$1</mark>').replace(/___/g,'<span class="blank" aria-label="gap">______</span>');
+function mapHTML(){const T=40,W=440,H=280;let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Map of Pinehollow. Main Street goes from left to right. Snow Lane is the first turning and Bell Street is the second turning." shape-rendering="crispEdges">`;
+ s+=`<rect width="${W}" height="${H}" fill="#e8f4ff"/>`;
+ [[0,1],[0,2],[0,4],[0,5],[0,6],[5,0],[10,0],[5,6],[10,6],[0,0]].slice(0,9).forEach(([x,y])=>{const cx=x*T+20,cy=y*T+8;s+=`<polygon points="${cx},${cy} ${cx+10},${cy+20} ${cx-10},${cy+20}" fill="#2c7d47" stroke="#14102e" stroke-width="2"/><rect x="${cx-2}" y="${cy+20}" width="4" height="6" fill="#4e2c1a"/>`});
+ s+=`<rect x="0" y="${3*T}" width="${W}" height="${T}" fill="#6b7390"/><rect x="${3*T}" y="${T}" width="${T}" height="${5*T}" fill="#6b7390"/><rect x="${8*T}" y="${T}" width="${T}" height="${5*T}" fill="#6b7390"/>`;
+ for(let x=60;x<W;x+=28)if(!(x>3*T-8&&x<4*T)&&!(x>8*T-8&&x<9*T))s+=`<rect x="${x}" y="${3*T+18}" width="14" height="4" fill="#fff"/>`;
+ s+=`<text x="${6*T}" y="${3*T+14}" text-anchor="middle" font-family="Atkinson Hyperlegible,sans-serif" font-weight="700" font-size="15" fill="#fff">Main Street</text>`;
+ s+=`<text transform="translate(${3.5*T+5} ${5*T}) rotate(-90)" text-anchor="middle" font-family="Atkinson Hyperlegible,sans-serif" font-weight="700" font-size="15" fill="#fff">Snow Lane</text>`;
+ s+=`<text transform="translate(${8.5*T+5} ${2*T}) rotate(-90)" text-anchor="middle" font-family="Atkinson Hyperlegible,sans-serif" font-weight="700" font-size="15" fill="#fff">Bell Street</text>`;
+ MAP.places.forEach(p=>{const x=p.x*T+3,y=p.y*T+3,w=p.w*T-6,h=p.h*T-6,cx=x+w/2,cy=y+h/2;s+=`<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${p.c}" stroke="#14102e" stroke-width="3"/><rect x="${x+2}" y="${y+2}" width="${w-4}" height="5" fill="#fff"/>`;
+  const parts=(p.w===2&&p.n.includes(' '))?p.n.split(' '):[p.n];parts.forEach((ln,k)=>{const yy=cy+6+(parts.length>1?(k?10:-10):0);s+=`<text x="${cx}" y="${yy}" text-anchor="middle" font-family="Atkinson Hyperlegible,sans-serif" font-weight="700" font-size="${p.w===2&&ln.length>7?14:16}" fill="#fff" stroke="#14102e" stroke-width="3.5" paint-order="stroke">${esc(ln)}</text>`})});
+ s+=`<rect x="2" y="${3*T+6}" width="38" height="28" fill="#ffd34d" stroke="#14102e" stroke-width="2"/><text x="21" y="${3*T+25}" text-anchor="middle" font-family="Atkinson Hyperlegible,sans-serif" font-weight="700" font-size="12" fill="#14102e">START</text><polygon points="44,${3*T+12} 60,${3*T+20} 44,${3*T+28}" fill="#ffd34d" stroke="#14102e" stroke-width="2"/>`;
+ s+=`<g transform="translate(20 22)"><polygon points="0,-14 6,0 -6,0" fill="#e8384f" stroke="#14102e" stroke-width="2"/><text x="0" y="14" text-anchor="middle" font-family="Atkinson Hyperlegible,sans-serif" font-weight="700" font-size="13" fill="#14102e">N</text></g></svg>`;
+ return `<div class="mapw">${s}</div><p class="mapkey">You start at <b>START</b> and you face the arrow. Your left is the top of the map.</p>`}
+function ttHTML(){return `<div class="scroll ttw"><table class="tt"><caption>Sleigh-train timetable · Christmas Eve</caption><thead><tr><th>Train</th><th>To</th><th>Leaves</th><th>Arrives</th><th>Platform</th><th>Notes</th></tr></thead><tbody>${TT.map(r=>`<tr><td data-l="Train">${r.t}</td><td data-l="To">${r.to}</td><td class="n" data-l="Leaves">${r.lv}</td><td class="n" data-l="Arrives">${r.ar}</td><td class="n" data-l="Platform">${r.p}</td><td data-l="Notes">${r.note}</td></tr>`).join('')}</tbody></table></div>`}
+function clozeHTML(it,set){const T=it.T;return `<div class="read">${T.text.replace(/\{(\d+)\}/g,(m,n)=>{n=+n;const idx=set.findIndex(o=>o.gap===n);if(idx<0)return `<span class="gap pre">${esc(T.gaps[n].a[0])}</span>`;const o=set[idx];if(o===it)return `<span class="gap now">(${idx+1}) ______</span>`;if(o.res)return `<span class="gap ${o.res.ok?'ok':'bad'}">${esc(o.res.ok?o.res.given:o.a[0])}</span>`;return `<span class="gap todo">(${idx+1}) ______</span>`})}</div>`}
+function ctxHTML(it,set){const T=it.T;if(it.type==='cloze')return clozeHTML(it,set);if(T.ctx==='map')return mapHTML();if(T.ctx==='tt')return ttHTML();if(T.text)return `<div class="read">${T.text}</div>`;return ''}
+function optsHTML(it){return `<div class="opts" role="group" aria-label="Answers">${it.choices.map((c,i)=>`<button class="opt" data-i="${i}"><span class="ol">${'ABCD'[i]}</span><span class="ot">${esc(c)}</span><span class="om"></span></button>`).join('')}</div>`}
+const inputHTML=()=>`<div class="ansrow"><label class="lab" for="ans" style="position:absolute;left:-9999px">Your answer</label><input id="ans" class="inp" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="Type here"><button class="btn" id="chk">Check</button></div><div id="nearMsg"></div>`;
+function bankHTML(it,set){const b=it.T.bank||(set&&set.bank)||(it.T.autoBank?shuffle([it.a[0]].concat(sample(it.T.extra.filter(x=>x!==it.a[0]),3))):null);return b?`<div class="bank"><span class="bl">Word box:</span>${b.map(w=>`<span>${esc(w)}</span>`).join('')}</div>`:''}
+function qHTML(it,set){switch(it.type){
+ case 'mc':return `<p class="q">${fmt(it.q)}</p>${optsHTML(it)}`;
+ case 'map':return `<p class="q">Where do these directions take you?</p><p class="dir">${esc(it.d)}</p>${optsHTML(it)}`;
+ case 'type':return `<p class="q">${fmt(it.q)}</p>${bankHTML(it,set)}${inputHTML()}`;
+ case 'fix':return `<p class="q">${fmt(it.q)}</p><p class="ins">The <mark>highlighted</mark> word is wrong. Write the correct word.</p>${inputHTML()}`;
+ case 'cloze':{const idx=set.indexOf(it);return `<p class="q">Write the missing word for gap (${idx+1}). <span class="cue">Clue: ${esc(it.cue)}</span></p>${inputHTML()}`}
+ case 'order':return `<p class="q">Tap the words in order. One word is extra!</p><div class="line" id="line"></div><div class="tiles" id="pool" role="group" aria-label="Words"></div><div class="row"><button class="btn ghost sm" id="undo">Undo</button><button class="btn ghost sm" id="clr">Clear</button><button class="btn" id="chk">Check</button></div>`}}
+
+/* ============ ASK ============ */
+function askCurrent(){const set=S.sets[S.phase];ask(set[S.itemIdx],set,false)}
+function ask(it,set,practice){const T=it.T,total=set.length,idx=set.indexOf(it);S.cur={it,set,practice,hint:0,near:false,done:false,placed:[],gone:-1};
+ const head=`<div class="ch"><span class="tag ${T.skill==='Writing'?'wr':''}">${T.skill}</span><span class="tag tp">${esc(it.topic||T.topic)}</span><span class="qn">${practice?`Practice · ${P.idx+1} of ${P.queue.length}`:`Question ${idx+1} of ${total}`}</span></div><h2>${esc(T.title)}</h2><p class="ins">${esc(T.instr)}</p>`;
+ const hintLbl=practice?'Hint':'Hint · −3 points';
+ card(head+ctxHTML(it,set)+qHTML(it,set)+`<div class="hints" id="hints"><div class="row"><button class="btn ghost sm" id="hintBtn">${icon('bulb',18)} ${hintLbl}</button></div><div id="hintBox" class="hints"></div></div><div id="fb"></div>`);
+ bindAnswer(it);$('#hintBtn').onclick=useHint;
+ const first=$('#ans')||$('.opt')||$('.tile');if(first&&matchMedia('(pointer:fine)').matches)first.focus({preventScroll:true})}
+function bindAnswer(it){
+ if(it.type==='mc'||it.type==='map')document.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{if(S.cur.done||b.disabled)return;const i=+b.dataset.i;resolve(i===it.ci,it.choices[i],null,i)});
+ else if(it.type==='order'){drawTiles();$('#undo').onclick=()=>{S.cur.placed.pop();drawTiles()};$('#clr').onclick=()=>{S.cur.placed=[];drawTiles()};$('#chk').onclick=checkOrder}
+ else{const go=()=>checkTyped();$('#chk').onclick=go;$('#ans').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();go()}}}}
+function drawTiles(){const it=S.cur.it,pl=S.cur.placed;
+ $('#line').innerHTML=pl.length?pl.map((k,i)=>{const t=it.tiles[k];return `<button class="tile" data-k="${k}" aria-label="Remove ${esc(t.w)}">${esc(i===0?cap(t.w):t.w)}</button>`}).join('')+`<span class="punct">${it.p}</span>`:'<span class="ph">Tap the words below to build the sentence.</span>';
+ $('#pool').innerHTML=it.tiles.map((t,k)=>pl.includes(k)||k===S.cur.gone?'':`<button class="tile" data-k="${k}">${esc(t.w)}</button>`).join('');
+ document.querySelectorAll('#pool .tile').forEach(b=>b.onclick=()=>{if(S.cur.done)return;beep(SFX.click);S.cur.placed.push(+b.dataset.k);drawTiles();const nb=$('#pool .tile');if(nb&&matchMedia('(pointer:fine)').matches)nb.focus()});
+ document.querySelectorAll('#line .tile').forEach(b=>b.onclick=()=>{if(S.cur.done)return;S.cur.placed=S.cur.placed.filter(k=>k!==+b.dataset.k);drawTiles()})}
+function checkOrder(){if(S.cur.done)return;const it=S.cur.it;if(!S.cur.placed.length){$('#line').classList.add('shake');setTimeout(()=>$('#line')&&$('#line').classList.remove('shake'),600);return}
+ const words=S.cur.placed.map(k=>it.tiles[k].w);const given=norm(words.join(' '));const acc=[it.w.join(' ')].concat(it.alt||[]).map(norm);resolve(acc.includes(given),cap(words.join(' '))+it.p)}
+function checkTyped(){if(S.cur.done)return;const it=S.cur.it,inp=$('#ans'),v=inp.value;const g=norm(v);if(!g){inp.classList.add('shake');setTimeout(()=>inp.classList.remove('shake'),600);inp.focus();return}
+ const acc=it.a.map(norm);if(acc.includes(g))return resolve(true,v.trim());const mis=it.mis&&it.mis[g];
+ if(!mis&&!S.cur.near&&acc.some(a=>a.length>=4&&lev(a,g)===1)){S.cur.near=true;beep(SFX.clue);$('#nearMsg').innerHTML=`<div class="near" role="status"><b>So close!</b> Check your spelling and try one more time. (No heart lost.)</div>`;inp.focus();inp.select();return}
+ resolve(false,v.trim(),mis)}
+function correctText(it){if(it.type==='mc'||it.type==='map')return it.choices[it.ci];if(it.type==='order')return cap(it.w.join(' '))+it.p;return it.a[0]}
+
+/* ============ HINTS ============ */
+function useHint(){const c=S.cur;if(c.done||c.hint>=2)return;const it=c.it;c.hint++;if(!c.practice){S.hintsUsed++}beep(SFX.clue);let txt='';
+ if(c.hint===1)txt=it.hint||it.T.rule;else{
+  if(it.type==='mc'||it.type==='map'){const wrong=it.choices.map((_,i)=>i).filter(i=>i!==it.ci&&!document.querySelector(`.opt[data-i="${i}"]`).disabled);const e=wrong[rnd(wrong.length)];const b=document.querySelector(`.opt[data-i="${e}"]`);b.disabled=true;b.classList.add('elim');b.querySelector('.om').textContent='not this one';txt=`One wrong answer is gone: “${it.choices[e]}”.`}
+  else if(it.type==='order'){const k=it.tiles.findIndex(t=>t.extra);if(k>=0){c.gone=k;c.placed=c.placed.filter(x=>x!==k);drawTiles();txt=`The extra word was “${it.tiles[k].w}”. It's gone now.`}else txt=`The first word is “${cap(it.w[0])}”.`}
+  else{const a=it.a[0];txt=`The answer starts with “${a[0]}”`+(/^[a-z]+$/i.test(a)?` and has ${a.length} letters.`:'.')}}
+ $('#hintBox').insertAdjacentHTML('beforeend',`<div class="hbox">${icon('bulb',18)}<span><b>Hint ${c.hint}:</b> ${esc(txt)}</span></div>`);
+ const hb=$('#hintBtn');if(c.hint===1)hb.innerHTML=`${icon('bulb',18)} Another hint${c.practice?'':' · −3 points'}`;else{hb.disabled=true;hb.textContent='No more hints'}}
+
+/* ============ RESOLVE ============ */
+function resolve(ok,given,mis,optIdx){const c=S.cur,it=c.it;if(c.done)return;c.done=true;
+ const pts=ok?Math.max(1,10-3*c.hint-(c.near?2:0)):0;it.res={ok,given};
+ if(!c.practice){S.log.push({id:it.id,it,ok,given,pts,room:S.room,skill:it.T.skill,topic:it.topic||it.T.topic,hint:c.hint});
+  if(ok){S.score+=pts;S.roomScore+=pts}else{S.hearts--;S.heartsLost++;S.roomLost++;S.errors.set(it.id,{it,given})}hud();rail()}
+ else{P.log.push({id:it.id,ok});if(ok)P.fixed.add(it.id);else P.queue.push(prep(it.src,it.T))}
+ beep(ok?SFX.ok:SFX.bad);
+ document.querySelectorAll('.opt').forEach(b=>{b.disabled=true;const i=+b.dataset.i;if(i===it.ci){b.classList.add('right');b.querySelector('.om').textContent='✓ correct'}else if(i===optIdx){b.classList.add('wrong');b.querySelector('.om').textContent='✗ your answer'}});
+ document.querySelectorAll('#ans,#chk,#undo,#clr,.tile,#hintBtn').forEach(e=>e.disabled=true);$('#hints').hidden=true;
+ const why=(mis?`<p><b>Watch out:</b> ${esc(mis)}</p>`:'')+`<p style="margin:0">${esc(it.why)}</p>`;
+ const lastHeart=!c.practice&&!ok&&S.hearts<=0;
+ const head=ok?`<div class="big">Correct! ${c.practice?'Mistake fixed.':`+${pts} points`}</div>`:`<div class="big">Not quite.${c.practice?' Try it again later.':' You lose a heart.'}</div>`;
+ const body=ok?'':`<p>Your answer: <s>${esc(given)}</s></p><p>Correct answer: <b>${esc(correctText(it))}</b></p>`;
+ $('#fb').innerHTML=`<div class="fb ${ok?'ok':'bad'}" role="status">${head}${body}<div class="why">${why}</div><button class="btn" id="nextBtn">${lastHeart?'Oh no… ▶':'Next ▶'}</button></div>`;
+ if(it.type==='cloze'){const rd=document.querySelector('.read');if(rd)rd.outerHTML=clozeHTML(it,c.set)}
+ const nb=$('#nextBtn');nb.onclick=()=>{beep(SFX.click);c.practice?nextPractice():nextItem()};nb.focus({preventScroll:true});nb.scrollIntoView({block:'nearest',behavior:RM?'auto':'smooth'})}
+
+/* ============ FLOW ============ */
+function nextItem(){if(S.hearts<=0)return freeze();S.itemIdx++;if(S.itemIdx<S.sets[S.phase].length)return askCurrent();
+ const k=S.phase;S.clues[k]=true;S.phase++;S.itemIdx=0;if(S.room===6&&k===0)S.runeTemp=true;hud();rail();beep(SFX.clue);
+ const extra=S.room===6&&k===0?`<p>You also found the last golden rune:</p><div class="runes" style="justify-content:center"><span class="rune"><img src="${IMG.rune}" alt=""><b>N</b></span></div>`:'';
+ overlay(`${icon('scroll',72,'')}<h2>Trial ${k+1} complete!</h2><p>Clue ${k+1} is unlocked:</p><blockquote>${esc(S.code.c[k])}</blockquote>${extra}${k===1?'<p>Now you have two clues. The door lock is ready!</p>':''}<div class="row"><button class="btn" id="ovGo">${k===0?'Go to trial 2 ▶':'Go to the door ▶'}</button></div>`,()=>{$('#ovGo').onclick=()=>{closeOv();S.phase<2?askCurrent():codeScreen()}})}
+function codeScreen(){S.phase=2;hud();rail();const R=ROOMS[S.room],Cd=S.code;
+ const clues=[0,1,2].map(k=>S.clues[k]?`<div class="c">${icon('scroll',30)}<span>Clue ${k+1}: ${esc(Cd.c[k])}</span></div>`:(k===2?`<div class="c lock">${icon('scrollG',30)}<span>Bonus clue: it unlocks if you write a wrong code.</span></div>`:'')).join('');
+ const ctx=R.codeCtx==='map'?mapHTML():R.codeCtx==='tt'?ttHTML():R.codeCtx==='runes'?`<p class="ins" style="margin-top:12px">Your golden runes (mixed up):</p><div class="runes">${shuffle(['L','A','N','T','E','R','N']).map(l=>`<span class="rune"><img src="${IMG.rune}" alt=""><b>${l}</b></span>`).join('')}</div>`:'';
+ card(`<div class="ch"><span class="tag wr">Writing</span><span class="tag tp">Door code</span><span class="qn">Hearts left: ${S.hearts}</span></div><h2>${R.final?'The crystal lock':'The locked door'}</h2><p class="ins">Read your clues and find the code. ${esc(R.codeAsk)}</p><div class="cluebox">${clues}</div>${ctx}<label class="lab" for="codeIn" style="margin:14px 4px 4px">${icon('lock',22)} Door code</label><div class="coderow"><input id="codeIn" class="inp" autocomplete="off" autocorrect="off" spellcheck="false" ${Cd.num?'inputmode="numeric"':''} placeholder="${Cd.num?'0000':'CODE'}"><button class="btn" id="codeGo">Open ${icon('key',28)}</button></div><div id="codeMsg" role="status"></div>`);
+ const go=()=>tryCode();$('#codeGo').onclick=go;$('#codeIn').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();go()}};if(matchMedia('(pointer:fine)').matches)$('#codeIn').focus({preventScroll:true})}
+function tryCode(){const inp=$('#codeIn'),v=inp.value;if(!norm(v)){inp.classList.add('shake');setTimeout(()=>inp.classList.remove('shake'),600);return}
+ const Cd=S.code;const g=Cd.num?v.replace(/\D/g,''):normCode(v);const acc=Cd.a.map(a=>Cd.num?a:normCode(a));
+ if(acc.includes(g)){const pts=Math.max(10,30-10*S.codeTries);S.score+=pts;S.roomScore+=pts;S.codeLog.push({room:S.room,tries:S.codeTries,ok:true});return openDoor(pts)}
+ if(!Cd.num&&!S.codeNear&&acc.some(a=>a.length>=4&&lev(a,g)===1)){S.codeNear=true;$('#codeMsg').innerHTML=`<div class="near"><b>So close!</b> Check your spelling and try again. (No heart lost.)</div>`;beep(SFX.clue);return}
+ S.codeTries++;S.hearts--;S.heartsLost++;S.roomLost++;S.codeLog.push({room:S.room,tries:S.codeTries,ok:false,given:v});const newClue=!S.clues[2];S.clues[2]=true;beep(SFX.bad);hud();rail();
+ if(S.hearts<=0){$('#codeMsg').innerHTML=`<div class="fb bad"><div class="big">The lock doesn't open.</div><p>That was your last heart. The correct code was <b>${esc(Cd.a[0].toUpperCase())}</b>.</p><button class="btn" id="frz">Oh no… ▶</button></div>`;$('#frz').onclick=freeze;$('#frz').focus();return}
+ const keep=v;codeScreen();$('#codeIn').value=keep;$('#codeMsg').innerHTML=`<div class="fb bad"><div class="big">The lock doesn't open.</div><p>You lose a heart.${newClue?' The <b>bonus clue</b> is now unlocked: read it above.':' Read the clues again.'}</p></div>`;$('#codeIn').select()}
+function openDoor(pts){S.phase=3;S.codeNear=false;hud();beep(SFX.door);S.anim={kind:'door',t0:performance.now()};dirty=true;
+ document.querySelectorAll('#codeIn,#codeGo').forEach(e=>e.disabled=true);$('#codeMsg').innerHTML=`<div class="fb ok"><div class="big">Click! The door opens. +${pts} points</div></div>`;
+ setTimeout(roomDone,RM?300:1700)}
+function roomDone(){const R=ROOMS[S.room];const perfect=S.roomLost===0;if(perfect){S.score+=20;S.roomScore+=20}
+ if(S.room<6&&!S.runes.includes(S.room))S.runes.push(S.room);S.roomStats[S.room]={pts:S.roomScore,lost:S.roomLost,perfect};S.done=S.room+1;hud();rail();
+ const last=S.room===6;const rune=last?'':`<p>You won a golden rune:</p><div class="runes" style="justify-content:center"><span class="rune"><img src="${IMG.rune}" alt=""><b>${R.rune}</b></span></div>`;
+ overlay(`${icon(last?'lantern':'key',last?56:72)}<h2>${last?'The Star Lantern is free!':`Room ${S.room+1} complete!`}</h2>${rune}<p>Points in this room: <b>${S.roomScore}</b>${perfect?` · ${icon('star',22)} Perfect room bonus: <b>+20</b>`:''}</p><div class="row"><button class="btn" id="ovGo">${last?'See my results ▶':`Climb to room ${S.room+2} ▶`}</button></div>`,()=>{$('#ovGo').onclick=()=>{closeOv();S.anim=null;if(last)return win();startRoom(S.room+1)}})}
+function freeze(){beep(SFX.freeze);S.frozen++;overlay(`<img class="art" src="${IMG.nix}" alt="Nix the frost sprite laughing"><h2>Frozen!</h2><p>Nix froze the room: you have no hearts left. Don't worry! Your mistakes are saved for practice, and you can try the room again with new questions.</p><p class="mini">You lose the points you won in this room (${S.roomScore}).</p><div class="row"><button class="btn" id="ovGo">Try room ${S.room+1} again ▶</button></div>`,()=>{$('#ovGo').onclick=()=>{closeOv();S.score-=S.roomScore;startRoom(S.room)}})}
+
+/* ============ RESULTS ============ */
+function win(){show('win');const L=S.log,tot=L.length,ok=L.filter(x=>x.ok).length,acc=tot?Math.round(ok/tot*100):0;
+ const pct=f=>{const a=L.filter(f);return a.length?[Math.round(a.filter(x=>x.ok).length/a.length*100),a.length]:[null,0]};
+ const bar=(lab,[v,n])=>v===null?'':`<div class="bar"><span>${esc(lab)} <span class="mini">(${n})</span></span><span class="v">${v}%</span><span class="tr"><i class="${v<60?'lo':''}" style="width:${v}%"></i></span></div>`;
+ const codeFirst=S.codeLog.filter(c=>c.ok&&c.tries===0).length;const best=+store.get('xer_best')||0;if(S.score>best)store.set('xer_best',S.score);
+ const errs=[...S.errors.values()];
+ const rows=ROOMS.map((R,i)=>{const st=S.roomStats[i]||{pts:0,lost:0};return `<tr><td>${i+1}. ${esc(R.name)}</td><td class="n">${st.pts}</td><td class="n">${st.lost}</td><td class="n">${st.perfect?icon('star',18,'perfect'):'–'}</td></tr>`}).join('');
+ const msg=acc>=90?'Amazing work! You are a true lantern-keeper.':acc>=75?'Great job! A few things to practise.':acc>=60?'Good effort! Practise your mistakes to get even better.':'You did it! Now practise your mistakes: you will see a big difference.';
+ $('#results').innerHTML=`<h1 style="font-size:clamp(30px,5vw,48px)">You saved Christmas in Pinehollow!</h1><p class="sub pix" style="color:var(--frost);margin-top:10px">${S.name?esc(S.name)+' · ':''}${esc(msg)}</p>
+ <div class="kpis"><div class="kpi"><span class="k">Score</span><b>${S.score}</b><span class="mini">of ${MAXPTS}</span></div><div class="kpi"><span class="k">Accuracy</span><b>${acc}%</b><span class="mini">${ok} of ${tot} answers</span></div><div class="kpi"><span class="k">Time</span><b>${fmtT(S.elapsed)}</b><span class="mini">minutes : seconds</span></div><div class="kpi"><span class="k">Perfect rooms</span><b>${S.roomStats.filter(r=>r&&r.perfect).length}/7</b><span class="mini">${codeFirst}/7 codes first try</span></div></div>
+ <div class="cols"><div><h3>Skills</h3><div class="bars">${bar('Reading',pct(x=>x.skill==='Reading'))}${bar('Writing',pct(x=>x.skill==='Writing'))}</div><h3 style="margin-top:18px">Contents</h3><div class="bars">${TOPICS.map(tp=>bar(tp,pct(x=>x.topic===tp))).join('')}</div></div>
+ <div><h3>Room by room</h3><div class="scroll"><table class="rt"><thead><tr><th>Room</th><th style="text-align:right">Points</th><th style="text-align:right">Hearts lost</th><th style="text-align:right">Star</th></tr></thead><tbody>${rows}</tbody></table></div><p class="mini" style="margin-top:10px">Hints used: <b>${S.hintsUsed}</b> · Hearts lost: <b>${S.heartsLost}</b> · Frozen rooms: <b>${S.frozen}</b>${best&&S.score<=best?` · Best score on this device: <b>${best}</b>`:S.score>best?' · New best score on this device!':''}</p></div></div>
+ <h3 style="margin-top:20px">My mistakes (${errs.length})</h3>${errs.length?`<details><summary>Show my mistakes and the explanations</summary><div class="mis">${errs.map(e=>misHTML(e)).join('')}</div></details>`:'<p>No mistakes at all. Incredible!</p>'}
+ <div class="row" style="margin-top:16px"><button class="btn" id="pracBtn" ${errs.length?'':'disabled'}>Practise only my mistakes (${errs.length}) ▶</button><button class="btn ghost" id="againBtn">Play again</button><button class="btn ghost" id="copyBtn">Copy my results</button></div><div id="copyBox"></div>`;
+ $('#pracBtn').onclick=()=>startPractice();$('#againBtn').onclick=()=>newGame();$('#copyBtn').onclick=copyResults}
+function qText(it){switch(it.type){case 'map':return 'Directions: '+it.d;case 'order':return 'Order the words: '+it.w.join(' / ');case 'cloze':return `Nix's letter, gap with the clue “${it.cue}”`;default:return it.q.replace(/\[\[(.+?)\]\]/g,'[$1]')}}
+function misHTML(e){const it=e.it;return `<div class="m"><div class="mq">${esc(qText(it))}</div><div class="ma">You: ${esc(e.given)}</div><div class="mc">Correct: ${esc(correctText(it))}</div><div class="mw">${esc(it.why)}</div></div>`}
+function resultsText(){const L=S.log,ok=L.filter(x=>x.ok).length;const pct=f=>{const a=L.filter(f);return a.length?Math.round(a.filter(x=>x.ok).length/a.length*100)+'%':'–'};
+ return `Christmas Escape Room – ${S.name||'Student'}\nScore: ${S.score}/${MAXPTS} · Accuracy: ${L.length?Math.round(ok/L.length*100):0}% · Time: ${fmtT(S.elapsed)}\nReading: ${pct(x=>x.skill==='Reading')} · Writing: ${pct(x=>x.skill==='Writing')}\n`+TOPICS.map(t=>`${t}: ${pct(x=>x.topic===t)}`).join('\n')+`\nHints: ${S.hintsUsed} · Hearts lost: ${S.heartsLost} · Frozen rooms: ${S.frozen}\nMistakes: ${S.errors.size}`}
+function copyResults(){const txt=resultsText();const box=$('#copyBox');const fallback=()=>{box.innerHTML=`<p class="mini" style="margin-top:10px">Select the text and copy it:</p><textarea class="copy" readonly>${esc(txt)}</textarea>`;const ta=box.querySelector('textarea');ta.focus();ta.select()};
+ try{navigator.clipboard.writeText(txt).then(()=>{box.innerHTML='<p class="mini" style="margin-top:10px">Copied! Paste it in a message to your teacher.</p>'},fallback)}catch(e){fallback()}}
+
+/* ============ PRACTICE ============ */
+function startPractice(pool){const errs=Array.isArray(pool)?pool:[...S.errors.values()];if(!errs.length)return;P={items:errs,queue:shuffle(errs.map(e=>prep(e.it.src,e.it.T))),idx:0,fixed:new Set(),total:errs.length,log:[]};show('game');$('#hud').hidden=true;
+ $('#rail').innerHTML=`<div class="px"><h3>Practice mode</h3><p class="mini">Only your mistakes. No hearts and no points: take your time and read the explanations.</p><p class="mini">If you miss a question again, it comes back later.</p><button class="btn ghost sm" id="endPrac">Finish practice</button></div>`;$('#endPrac').onclick=endPractice;
+ drawRoom($('#sceneCv'),6,performance.now()/1000);practiceAsk()}
+function practiceAsk(){const it=P.queue[P.idx];ask(it,[it],true)}
+function nextPractice(){P.idx++;if(P.idx<P.queue.length)return practiceAsk();endPractice()}
+function endPractice(){const left=P.total-P.fixed.size;overlay(`${icon('star',64)}<h2>Practice finished</h2><p>You fixed <b>${P.fixed.size}</b> of your <b>${P.total}</b> mistakes.</p>${left?`<p>${left} still need practice. You can try them again.</p>`:'<p>All your mistakes are fixed. Brilliant!</p>'}<div class="row">${left?'<button class="btn" id="again2">Practise the rest ▶</button>':''}<button class="btn ghost" id="back2">Back to my results</button><button class="btn ghost" id="new2">Play again</button></div>`,()=>{
+ if($('#again2'))$('#again2').onclick=()=>{closeOv();startPractice(P.items.filter(e=>!P.fixed.has(e.it.id)))};
+ $('#back2').onclick=()=>{closeOv();win()};$('#new2').onclick=()=>{closeOv();newGame()}})}
+
+/* ============ OVERLAYS ============ */
+let ovOpen=false;
+function overlay(html,bind){$('#ovp').innerHTML=html;$('#ov').hidden=false;ovOpen=true;bind&&bind();const f=$('#ovp button');f&&f.focus({preventScroll:true})}
+function closeOv(){$('#ov').hidden=true;ovOpen=false}
+let lang='en';
+const HOW={en:{t:'How to play',items:['The tower has <b>7 rooms</b>. Each room has <b>2 trials</b> and a locked door.','Finish a trial to unlock a <b>clue</b>. Read both clues to find the <b>door code</b>.','Write the code to open the door and win a <b>golden rune</b>. Room 7 uses everything you learned!','You have <b>3 hearts</b> in every room (5 in Gentle mode). A wrong answer or a wrong code costs 1 heart. No hearts left? The room freezes and you try it again with new questions.','Stuck? Use a <b>hint</b>. Hints cost 3 points, but they never show the answer.','After every answer, <b>read the feedback</b>. It explains your mistakes.','At the end you see your results, and you can <b>practise only your mistakes</b>.'],pts:'Points: correct answer +10 · each hint −3 · door code up to +30 · perfect room (no hearts lost) +20.',ctl:'Use the Pause button (or the Esc key) to pause, restart or turn the sound off.',sw:'Ver en español'},
+ es:{t:'Cómo jugar',items:['La torre tiene <b>7 salas</b>. Cada sala tiene <b>2 pruebas</b> y una puerta cerrada.','Al terminar una prueba se desbloquea una <b>pista</b>. Con las dos pistas descubres el <b>código de la puerta</b>.','Escribe el código para abrir la puerta y ganar una <b>runa dorada</b>. ¡La sala 7 usa todo lo que aprendiste!','Tienes <b>3 corazones</b> en cada sala (5 en modo Gentle). Una respuesta o un código incorrecto cuesta 1 corazón. Si te quedas sin corazones, la sala se congela y la repites con preguntas nuevas.','¿Te trabaste? Usa una <b>pista</b>. Cuesta 3 puntos, pero nunca muestra la respuesta.','Después de cada respuesta, <b>lee la retroalimentación</b>: explica tus errores.','Al final verás tus resultados y podrás <b>practicar solo tus errores</b>.'],pts:'Puntos: respuesta correcta +10 · cada pista −3 · código hasta +30 · sala perfecta (sin perder corazones) +20.',ctl:'Usa el botón Pause (o la tecla Esc) para pausar, reiniciar o apagar el sonido.',sw:'Read in English'}};
+function howTo(back){const H=HOW[lang];overlay(`<h2>${H.t}</h2><ol class="howto">${H.items.map(x=>`<li><span>${x}</span></li>`).join('')}</ol><p class="pts">${H.pts}</p><p class="mini" style="text-align:left">${H.ctl}</p><div class="row"><button class="btn" id="howOk">OK ▶</button><button class="btn ghost sm" id="howLang">${H.sw}</button></div>`,()=>{$('#howOk').onclick=()=>{closeOv();back&&back()};$('#howLang').onclick=()=>{lang=lang==='en'?'es':'en';howTo(back)}})}
+function pause(){if(screen!=='game'||ovOpen||P&&$('#hud').hidden)return;S.paused=true;
+ overlay(`<h2>Paused</h2><p>The clock is stopped. Take a break!</p><div class="row" style="flex-direction:column;align-items:stretch"><button class="btn" id="pRes">Resume ▶</button><button class="btn ghost" id="pHow">How to play</button><button class="btn ghost" id="pSnd" aria-pressed="${sound}">Sound: ${sound?'on':'off'}</button><button class="btn ghost" id="pRoom">Restart this room</button><button class="btn red" id="pNew">Restart the game</button></div>`,()=>{
+ $('#pRes').onclick=resume;$('#pHow').onclick=()=>howTo(pause);$('#pSnd').onclick=()=>{setSound(!sound);closeOv();pause()};
+ $('#pRoom').onclick=()=>confirmBox('Restart this room? You get new questions, and the points from this room go back to zero.',()=>{S.score-=S.roomScore;S.paused=false;startRoom(S.room)},pause);
+ $('#pNew').onclick=()=>confirmBox('Restart the whole game? You will lose all your progress.',()=>{S.paused=false;newGame()},pause)})}
+function resume(){S.paused=false;closeOv();lastT=performance.now()}
+function confirmBox(text,yes,no){overlay(`<h2>Are you sure?</h2><p>${esc(text)}</p><div class="row"><button class="btn red" id="cYes">Yes</button><button class="btn ghost" id="cNo">No, go back</button></div>`,()=>{$('#cYes').onclick=()=>{closeOv();yes()};$('#cNo').onclick=()=>{closeOv();no&&no()}})}
+function setSound(v){sound=v;store.set('xer_snd',v?'on':'off');const b=$('#sndBtn');b.textContent='Sound: '+(v?'on':'off');b.setAttribute('aria-pressed',v)}
+
+/* ============ EVENTS ============ */
+$('#startBtn').onclick=()=>{beep(SFX.click);newGame()};
+$('#howBtn').onclick=()=>howTo();
+$('#sndBtn').onclick=()=>setSound(!sound);setSound(sound);
+[['#m3',3],['#m5',5]].forEach(([id,n])=>$(id).onclick=()=>{heartsMax=n;$('#m3').setAttribute('aria-pressed',n===3);$('#m5').setAttribute('aria-pressed',n===5)});
+$('#pauseBtn').onclick=pause;
+$('#rail').addEventListener('click',e=>{if(e.target.closest('[data-act=how]'))howTo()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(S.paused)resume();else if(!ovOpen)pause();return}
+ if(ovOpen||screen!=='game'||!S.cur||S.cur.done)return;if(document.activeElement&&document.activeElement.tagName==='INPUT')return;const n='1234'.indexOf(e.key);if(n>=0){const b=document.querySelector(`.opt[data-i="${n}"]`);if(b&&!b.disabled)b.click()}});
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&screen==='game'&&!S.paused&&!ovOpen&&$('#hud').hidden===false)pause()});
+const best=+store.get('xer_best')||0;if(best){$('#bestLine').hidden=false;$('#bestLine').textContent=`Best score on this device: ${best} points`}
+
+/* ============ LOOP ============ */
+let dirty=true,lastDraw=0;
+setInterval(()=>{const now=performance.now();if(screen==='game'&&!S.paused&&!$('#hud').hidden)S.elapsed+=now-lastT;lastT=now;if(screen==='game')$('#time').textContent=fmtT(S.elapsed||0)},500);
+function frame(ts){requestAnimationFrame(frame);if(RM&&!dirty&&!(S.anim))return;if(ts-lastDraw<110&&!dirty)return;lastDraw=ts;dirty=false;const t=RM?2:ts/1000;
+ if(screen==='start')drawTitle($('#titleCv'),t,false);else if(screen==='win')drawTitle($('#winCv'),t,true);else if(screen==='game'&&!S.paused&&!(P&&$('#hud').hidden))drawRoom($('#sceneCv'),S.room,t)}
+requestAnimationFrame(frame);
+}
+</script>
+</body>
+</html>
